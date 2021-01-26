@@ -9,27 +9,28 @@
 #include <memory>
 
 
-typedef std::shared_ptr<Model> ModelPtr;
-
-
 class ModelPartBehavior
 {
+protected:
+	typedef std::shared_ptr<Model> ModelPtr;
+
 public:
 	virtual void apply( ModelPtr & model ) const = 0;
 };
 
 
-class NoModelPartBehavior : ModelPartBehavior
+class NoModelPartBehavior : public ModelPartBehavior
 {
 public:
 	void apply( ModelPtr & model ) const override;
 };
 
 
-class RotationModelPartBehavior : ModelPartBehavior
+class RotationModelPartBehavior : public ModelPartBehavior
 {
 private:
-	float angle;
+	float rotationAngle;
+	mutable float currentAngle;
 	glm::vec3 rotationAxis;
 
 public:

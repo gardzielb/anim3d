@@ -27,13 +27,11 @@ void VertexArray::addBuffer( const VertexBuffer & buffer, const VertexBufferLayo
 VertexArray::VertexArray()
 {
 	glCall( glGenVertexArrays( 1, &arrayId ) );
-	std::cout << "GENERATED VERTEX ARRAY, ID = " << arrayId << "\n";
 }
 
 VertexArray::~VertexArray()
 {
 	glCall( glDeleteVertexArrays( 1, &arrayId ) );
-	std::cout << "DELETED VERTEX ARRAY, ID = " << arrayId << "\n";
 }
 
 void VertexArray::bind() const

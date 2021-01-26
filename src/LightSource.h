@@ -10,48 +10,74 @@
 #include "Shader.h"
 
 
-struct LightSource
+struct Light
 {
 	glm::vec3 ambient;
 	glm::vec3 diffuse;
 	glm::vec3 specular;
 };
 
-struct DirectionalLightSource : public LightSource
+
+class LightSource
 {
-	glm::vec3 direction;
+protected:
+	Light light;
+
+public:
+	LightSource( const Light & light );
+
+	void setInShader( const Shader & shader, const std::string & sourceName ) const;
+
+protected:
+	virtual void setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const = 0;
+
+	virtual ~LightSource() = default;
 };
 
-struct PointLightSource : public LightSource
+
+class PointLightSource : public LightSource
 {
+private:
 	glm::vec3 position;
 	float constant = 1.0f;
 	float linear;
 	float quadratic;
+
+public:
+	PointLightSource( const Light & light, const glm::vec3 & position, float linear, float quadratic );
+
+protected:
+	void setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const override;
 };
 
-struct SpotLightSource : public LightSource
+
+class SpotLightSource : public LightSource
 {
+private:
 	glm::vec3 position;
 	glm::vec3 direction;
 	float innerCutOff, outerCutOff;
 	float constant = 1.0f;
 	float linear;
 	float quadratic;
+
+public:
+	SpotLightSource( const Light & light, const glm::vec3 & position, const glm::vec3 & direction, float innerCutOff,
+					 float outerCutOff, float linear, float quadratic );
+
+protected:
+	void setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const override;
 };
 
 
 class LightSourceSet
 {
 private:
-	DirectionalLightSource dirLightSource;
 	std::vector<PointLightSource> pointLightSources;
 	std::vector<SpotLightSource> spotLightSources;
 
 public:
-	LightSourceSet( DirectionalLightSource dirLightSource )
-			: dirLightSource( std::move( dirLightSource ) )
-	{}
+	LightSourceSet( int pointCount, int spotCount );
 
 	inline void addPointLightSource( const PointLightSource & lightSource )
 	{
@@ -63,14 +89,5 @@ public:
 		spotLightSources.push_back( lightSource );
 	}
 
-	void addToShader( const Shader & shader ) const;
-
-private:
-	void setDirLight( const Shader & shader ) const;
-
-	void setSpotLight( const Shader & shader, int index ) const;
-
-	void setPointLight( const Shader & shader, int index ) const;
-
-	void setLightUniversal( const Shader & shader, const LightSource & lightSource, const std::string & name ) const;
+	void setInShader( const Shader & shader ) const;
 };

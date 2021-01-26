@@ -5,56 +5,65 @@
 #include "LightSource.h"
 
 
-void LightSourceSet::addToShader( const Shader & shader ) const
+void LightSourceSet::setInShader( const Shader & shader ) const
 {
-	setDirLight( shader );
+	shader.setInt( "pointCount", pointLightSources.size() );
+	shader.setInt( "spotCount", spotLightSources.size() );
+
 	for ( int i = 0; i < pointLightSources.size(); i++ )
 	{
-		setPointLight( shader, i );
+		pointLightSources[i].setInShader( shader, "pointLights[" + std::to_string( i ) + "]" );
 	}
+
 	for ( int i = 0; i < spotLightSources.size(); i++ )
 	{
-		setSpotLight( shader, i );
+		spotLightSources[i].setInShader( shader, "spotLights[" + std::to_string( i ) + "]" );
 	}
 }
 
-void LightSourceSet::setSpotLight( const Shader & shader, int index ) const
+LightSourceSet::LightSourceSet( int pointCount, int spotCount )
 {
-	std::string name = "spotLights[" + std::to_string( index ) + "]";
-	const SpotLightSource & lightSource = spotLightSources[index];
-
-	setLightUniversal( shader, lightSource, name );
-	shader.setVector( name + ".position", lightSource.position );
-	shader.setVector( name + ".direction", lightSource.direction );
-	shader.setFloat( name + ".innerCutOff", std::cos( lightSource.innerCutOff ) );
-	shader.setFloat( name + ".outerCutOff", std::cos( lightSource.outerCutOff ) );
-	shader.setFloat( name + ".constant", lightSource.constant );
-	shader.setFloat( name + ".linear", lightSource.linear );
-	shader.setFloat( name + ".quadratic", lightSource.quadratic );
+	pointLightSources.reserve( pointCount );
+	spotLightSources.reserve( spotCount );
 }
 
-void LightSourceSet::setPointLight( const Shader & shader, int index ) const
-{
-	std::string name = "pointLights[" + std::to_string( index ) + "]";
-	const PointLightSource & lightSource = pointLightSources[index];
+LightSource::LightSource( const Light & light )
+		: light( light )
+{}
 
-	setLightUniversal( shader, lightSource, name );
-	shader.setVector( name + ".position", lightSource.position );
-	shader.setFloat( name + ".constant", lightSource.constant );
-	shader.setFloat( name + ".linear", lightSource.linear );
-	shader.setFloat( name + ".quadratic", lightSource.quadratic );
+void LightSource::setInShader( const Shader & shader, const std::string & sourceName ) const
+{
+	shader.setVector( sourceName + ".ambient", light.ambient );
+	shader.setVector( sourceName + ".diffuse", light.diffuse );
+	shader.setVector( sourceName + ".specular", light.specular );
+	setInShaderTypeSpecific( shader, sourceName );
 }
 
-void LightSourceSet::setDirLight( const Shader & shader ) const
+PointLightSource::PointLightSource( const Light & light, const glm::vec3 & position, float linear, float quadratic )
+		: LightSource( light ), position( position ), linear( linear ), quadratic( quadratic )
+{}
+
+void PointLightSource::setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const
 {
-	setLightUniversal( shader, dirLightSource, "directionalLight" );
-	shader.setVector( "directionalLight.direction", dirLightSource.direction );
+	shader.setVector( sourceName + ".position", position );
+	shader.setFloat( sourceName + ".constant", constant );
+	shader.setFloat( sourceName + ".linear", linear );
+	shader.setFloat( sourceName + ".quadratic", quadratic );
 }
 
-void LightSourceSet::setLightUniversal( const Shader & shader, const LightSource & lightSource,
-										const std::string & name ) const
+SpotLightSource::SpotLightSource( const Light & light, const glm::vec3 & position, const glm::vec3 & direction,
+								  float innerCutOff, float outerCutOff, float linear, float quadratic )
+		: LightSource( light ), position( position ), direction( direction ), innerCutOff( innerCutOff ),
+		  outerCutOff( outerCutOff ), linear( linear ), quadratic( quadratic )
+{}
+
+void SpotLightSource::setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const
 {
-	shader.setVector( name + ".ambient", lightSource.ambient );
-	shader.setVector( name + ".diffuse", lightSource.diffuse );
-	shader.setVector( name + ".specular", lightSource.specular );
+	shader.setVector( sourceName + ".position", position );
+	shader.setVector( sourceName + ".direction", direction );
+	shader.setFloat( sourceName + ".innerCutOff", innerCutOff );
+	shader.setFloat( sourceName + ".outerCutOff", outerCutOff );
+	shader.setFloat( sourceName + ".constant", constant );
+	shader.setFloat( sourceName + ".linear", linear );
+	shader.setFloat( sourceName + ".quadratic", quadratic );
 }

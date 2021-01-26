@@ -1,8 +1,17 @@
 #version 330 core
 
+struct Material
+{
+	sampler2D diffuse1;
+	sampler2D specular1;
+};
+
 out vec4 FragColor;
+in vec2 TexCoords;
+
+uniform Material material;
 
 void main()
 {
-    FragColor = vec4(1.0); // set all 4 vector values to 1.0
+	FragColor = texture(material.diffuse1, TexCoords) + texture(material.specular1, TexCoords);
 }

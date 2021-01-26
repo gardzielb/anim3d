@@ -10,7 +10,7 @@
 #include <assimp/Importer.hpp>
 
 
-std::optional<SimpleModel> ModelLoader::loadModel( const std::string & path, const glm::mat4 & modelMatrix )
+std::shared_ptr<SimpleModel> ModelLoader::loadModel( const std::string & path )
 {
 	// read file via ASSIMP
 	Assimp::Importer importer;
@@ -22,20 +22,23 @@ std::optional<SimpleModel> ModelLoader::loadModel( const std::string & path, con
 	if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode ) // if is Not Zero
 	{
 		std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << "\n";
-		return {};
+		return nullptr;
 	}
 	// retrieve the directory path of the filepath
 	directory = path.substr( 0, path.find_last_of( '/' ) );
-	meshes.reserve( scene->mNumMeshes );
+	texturesLoaded.clear();
+
+	MeshesPtr meshes = std::make_shared<std::vector<Mesh>>();
+	meshes->reserve( scene->mNumMeshes );
 
 	// process ASSIMP's root node recursively
-	processNode( scene->mRootNode, scene );
+	processNode( scene->mRootNode, scene, meshes );
 
-	return SimpleModel( meshes, modelMatrix );
+	return std::make_shared<SimpleModel>( meshes );
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-void ModelLoader::processNode( aiNode * node, const aiScene * scene )
+void ModelLoader::processNode( aiNode * node, const aiScene * scene, MeshesPtr & meshes )
 {
 	// process each mesh located at the current node
 	for ( unsigned int i = 0; i < node->mNumMeshes; i++ )
@@ -43,17 +46,16 @@ void ModelLoader::processNode( aiNode * node, const aiScene * scene )
 		// the node object only contains indices to index the actual objects in the scene.
 		// the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
 		aiMesh * mesh = scene->mMeshes[node->mMeshes[i]];
-		processMesh( mesh, scene );
+		processMesh( mesh, scene, meshes );
 	}
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
 	for ( unsigned int i = 0; i < node->mNumChildren; i++ )
 	{
-		processNode( node->mChildren[i], scene );
+		processNode( node->mChildren[i], scene, meshes );
 	}
-
 }
 
-void ModelLoader::processMesh( aiMesh * mesh, const aiScene * scene )
+void ModelLoader::processMesh( aiMesh * mesh, const aiScene * scene, MeshesPtr & meshes )
 {
 	// data to fill
 	std::vector<Vertex> vertices;
@@ -115,7 +117,7 @@ void ModelLoader::processMesh( aiMesh * mesh, const aiScene * scene )
 	textures.insert( textures.end(), heightMaps.begin(), heightMaps.end() );
 
 	// return a mesh object created from the extracted mesh data
-	meshes.emplace_back( vertices, indices, textures );
+	meshes->emplace_back( vertices, indices, textures );
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -129,11 +131,11 @@ std::vector<Texture> ModelLoader::loadMaterialTextures( aiMaterial * mat, aiText
 		mat->GetTexture( type, i, &str );
 		// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
 		bool skip = false;
-		for ( unsigned int j = 0; j < textures_loaded.size(); j++ )
+		for ( unsigned int j = 0; j < texturesLoaded.size(); j++ )
 		{
-			if ( std::strcmp( textures_loaded[j].path.data(), str.C_Str() ) == 0 )
+			if ( std::strcmp( texturesLoaded[j].path.data(), str.C_Str() ) == 0 )
 			{
-				textures.push_back( textures_loaded[j] );
+				textures.push_back( texturesLoaded[j] );
 				skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
 				break;
 			}
@@ -146,7 +148,7 @@ std::vector<Texture> ModelLoader::loadMaterialTextures( aiMaterial * mat, aiText
 			texture.path = str.C_Str();
 			textures.push_back( texture );
 			// store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
-			textures_loaded.push_back( texture );
+			texturesLoaded.push_back( texture );
 		}
 	}
 	return textures;

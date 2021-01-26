@@ -9,23 +9,33 @@
 #include "ModelPartBehavior.h"
 
 
-typedef std::shared_ptr<Model> ModelPtr;
-typedef std::shared_ptr<ModelPartBehavior> BehaviorPtr;
-
-
 class ComplexModel : public Model
 {
+	typedef std::shared_ptr<Model> ModelPtr;
+	typedef std::shared_ptr<ModelPartBehavior> BehaviorPtr;
+
 private:
-	std::vector<std::pair<ModelPtr, BehaviorPtr>> parts;
+	std::vector<std::tuple<ModelPtr, BehaviorPtr, glm::vec3>> parts;
 
 public:
-	ComplexModel( const std::vector<std::pair<ModelPtr, BehaviorPtr>> & parts );
-
-	Model & translate( const glm::vec3 & vector ) override;
-
-	Model & scale( const glm::vec3 & scaleVector ) override;
-
-	Model & rotate( float angle, const glm::vec3 & rotationAxis ) override;
+	ComplexModel( const std::vector<std::tuple<ModelPtr, BehaviorPtr, glm::vec3>> & parts );
 
 	void draw( const Shader & shader ) override;
+};
+
+
+class ComplexModelBuilder
+{
+	typedef std::shared_ptr<Model> ModelPtr;
+	typedef std::shared_ptr<ModelPartBehavior> BehaviorPtr;
+
+private:
+	std::vector<std::tuple<ModelPtr, BehaviorPtr, glm::vec3>> parts;
+
+public:
+	ComplexModelBuilder & reset();
+
+	ComplexModelBuilder & addPart( ModelPtr model, BehaviorPtr behavior, const glm::vec3 & offset = glm::vec3() );
+
+	std::shared_ptr<ComplexModel> construct() const;
 };

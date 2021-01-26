@@ -1,8 +1,5 @@
 #include "dependencies/glad.h"
 #include "glUtils.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "VertexArray.h"
 #include "Shader.h"
 #include "Camera.h"
 #include "LightSource.h"
@@ -11,15 +8,17 @@
 
 #include <GLFW/glfw3.h>
 
-#include <iostream>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
-#include <array>
-#include <optional>
 
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "dependencies/stb_image.h"
+#include "Sun.h"
+#include "ComplexModel.h"
+
+#include <spdlog/spdlog.h>
+
 
 void framebuffer_size_callback( GLFWwindow * window, int width, int height );
 
@@ -42,7 +41,7 @@ int main()
 	GLFWwindow * window = glfwCreateWindow( SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr );
 	if ( !window )
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+		spdlog::error( "Failed to create GLFW window" );
 		glfwTerminate();
 		return -1;
 	}
@@ -52,108 +51,49 @@ int main()
 	// glad: load all OpenGL function pointers
 	if ( !gladLoadGLLoader( (GLADloadproc) glfwGetProcAddress ) )
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		spdlog::error( "Failed to initialize GLAD" );
+		glfwTerminate();
 		return -1;
 	}
 
 // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
 	stbi_set_flip_vertically_on_load( true );
 
-	float lightVertices[] = {
-			-0.5f, -0.5f, -0.5,
-			0.5f, -0.5f, -0.5f,
-			0.5f, 0.5f, -0.5f,
-			-0.5f, 0.5f, -0.5f,
-
-			-0.5f, -0.5f, 0.5f,
-			0.5f, -0.5f, 0.5f,
-			0.5f, 0.5f, 0.5f,
-			-0.5f, 0.5f, 0.5f,
-
-			-0.5f, 0.5f, 0.5f,
-			-0.5f, 0.5f, -0.5f,
-			-0.5f, -0.5f, -0.5,
-			-0.5f, -0.5f, 0.5f,
-
-			0.5f, 0.5f, 0.5f,
-			0.5f, 0.5f, -0.5f,
-			0.5f, -0.5f, -0.5f,
-			0.5f, -0.5f, 0.5f,
-
-			-0.5f, -0.5f, -0.5,
-			0.5f, -0.5f, -0.5f,
-			0.5f, -0.5f, 0.5f,
-			-0.5f, -0.5f, 0.5f,
-
-			-0.5f, 0.5f, -0.5f,
-			0.5f, 0.5f, -0.5f,
-			0.5f, 0.5f, 0.5f,
-			-0.5f, 0.5f, 0.5f,
-	};
-	int indices[] = {
-			0, 1, 2, 2, 3, 0,
-			4, 5, 6, 6, 7, 4,
-			8, 9, 10, 10, 11, 8,
-			12, 13, 14, 14, 15, 12,
-			16, 17, 18, 18, 19, 16,
-			20, 21, 22, 22, 23, 20
-	};
-
-	IndexBuffer ib( indices, 6 * 6 );
-
-	VertexArray lightVa;
-	VertexBuffer lightVb( lightVertices, 4 * 6 * 3 * sizeof( float ) );
-	VertexBufferLayout lightLayout;
-	lightLayout.pushFloat( 3 );  // position
-	lightVa.addBuffer( lightVb, lightLayout );
-
 	Shader shader( "../src/shaders/phong" );
 	Shader lightShader( "../src/shaders/light" );
 
-	glm::vec3 lightPosition( 1.2f, 1.0f, 2.0f );
-	glm::mat4 lightModel = glm::mat4( 1.0f );
-	lightModel = glm::translate( lightModel, lightPosition );
-	lightModel = glm::scale( lightModel, glm::vec3( 0.2f ) );
+	glm::vec3 lightPosition( 0.5f, 0.5f, 0.5f );
 
 	glm::mat4 projection = glm::perspective( glm::radians( 45.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
 
 	Camera camera( glm::vec3( 0.0f, 0.0f, 3.0f ), glm::vec3( 0.0f, 0.0f, 0.0f ), 0.1f );
 
-	DirectionalLightSource sun;
-	sun.direction = glm::vec3( -0.2f, -1.0f, -0.3f );
-	sun.ambient = glm::vec3( 0.05f, 0.05f, 0.05f );
-	sun.diffuse = glm::vec3( 0.4f, 0.4f, 0.4f );
-	sun.specular = glm::vec3( 0.5f, 0.5f, 0.5f );
+	Light sunLight = { glm::vec3( 0.05f, 0.05f, 0.05f ), glm::vec3( 0.4f, 0.4f, 0.4f ), glm::vec3( 0.6f, 0.6f, 0.6f ) };
+	Light iceBallLight = {
+			glm::vec3( 0.05f, 0.05f, 0.05f ), glm::vec3( 0.8f, 0.8f, 0.8f ), glm::vec3( 1.0f, 1.0f, 1.0f )
+	};
+	Light flashLight = {
+			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 1.0f, 1.0f, 1.0f ), glm::vec3( 1.0f, 1.0f, 1.0f )
+	};
 
-	PointLightSource pointLight;
-	pointLight.position = lightPosition;
-	pointLight.constant = 1.0f;
-	pointLight.linear = 0.09f;
-	pointLight.quadratic = 0.032f;
-	pointLight.ambient = glm::vec3( 0.05f, 0.05f, 0.05f );
-	pointLight.diffuse = glm::vec3( 0.8f, 0.8f, 0.8f );
-	pointLight.specular = glm::vec3( 1.0f, 1.0f, 1.0f );
+	Sun sun( sunLight, 0.1f );
+	PointLightSource pointLight( iceBallLight, lightPosition, 0.09f, 0.032f );
+	SpotLightSource spotLight(
+			flashLight, camera.getPosition(), camera.getFront(), glm::radians( 12.5 ), glm::radians( 15.0 ), 0.09f,
+			0.032f
+	);
 
-	SpotLightSource spotLight;
-	spotLight.position = camera.getPosition();
-	spotLight.direction = camera.getFront();
-	spotLight.constant = 1.0f;
-	spotLight.linear = 0.09f;
-	spotLight.quadratic = 0.032f;
-	spotLight.ambient = glm::vec3( 0.0f, 0.0f, 0.0f );
-	spotLight.diffuse = glm::vec3( 1.0f, 1.0f, 0.5f );
-	spotLight.specular = glm::vec3( 1.0f, 1.0f, 0.5f );
-	spotLight.innerCutOff = glm::radians( 12.5 );
-	spotLight.outerCutOff = glm::radians( 15.0 );
-
-	LightSourceSet lightSet( sun );
+	LightSourceSet lightSet( 1, 1 );
 	lightSet.addPointLightSource( pointLight );
 	lightSet.addSpotLightSource( spotLight );
 
+	lightShader.bind();
+	lightShader.setMatrix( "projection", projection );
+
 	shader.bind();
 	shader.setMatrix( "projection", projection );
-	lightSet.addToShader( shader );
 	shader.setFloat( "material.shininess", 64.0f );
+	lightSet.setInShader( shader );
 
 	glm::mat4 model = glm::mat4( 1.0f );
 	model = glm::translate(
@@ -162,21 +102,56 @@ int main()
 	model = glm::scale( model, glm::vec3( 1.0f, 1.0f, 1.0f ) );    // it's a bit too big for our scene, so scale it down
 	shader.setMatrix( "model", model );
 
-	lightShader.bind();
-	lightShader.setMatrix( "projection", projection );
-	lightShader.setMatrix( "model", lightModel );
-
+	typedef std::shared_ptr<SimpleModel> ModelPtr;
 	ModelLoader modelLoader;
-	std::optional<SimpleModel> modelOpt = modelLoader.loadModel( "backpack/backpack.obj", glm::mat4( 1.0f ) );
-	if ( !modelOpt )
+
+	ModelPtr statue = modelLoader.loadModel( "models/orc_statue/orc_statue.obj" );
+	if ( !statue )
 		exit( 1 );
-	SimpleModel backpack = modelOpt.value();
-	backpack.rotate( 180, glm::vec3( 0.0f, 1.0f, 0.0f ) )
-			.scale( glm::vec3( 0.2f, 0.2f, 0.2f ) )
-			.translate( glm::vec3( 1.0f, 0.0f, 0.0f ) );
-//	SimpleModel backpack( "sleeper.obj" );
+	statue->scale( glm::vec3( 0.4f, 0.4f, 0.4f ) );
+
+	ModelPtr ground = modelLoader.loadModel( "models/ground/ground2.obj" );
+	if ( !ground )
+		exit( 1 );
+	ground->translate( glm::vec3( 0.0f, -0.5f, 0.0f ) );
+
+	ModelPtr iceBall = modelLoader.loadModel( "models/ice_ball/ice_ball.obj" );
+	if ( !iceBall )
+		exit( 1 );
+	iceBall->translate( lightPosition ).scale( glm::vec3( 0.1f, 0.1f, 0.1f ) );
+
+	ModelPtr building = modelLoader.loadModel( "models/building01/building01.obj" );
+	if ( !building )
+		exit( 1 );
+	building->translate( glm::vec3( -4.0f, -0.5f, 0.0f ) );
+
+	ModelPtr pripyat = modelLoader.loadModel( "models/pripyat/pripyat.obj" );
+	if ( !pripyat )
+		exit( 1 );
+	pripyat->translate( glm::vec3( 0.0f, -0.6f, -2.0f ) );
+
+	ModelPtr mi28NoDisc = modelLoader.loadModel( "models/mi28/mi28.obj" );
+	if ( !mi28NoDisc )
+		exit( 1 );
+
+	ModelPtr disc = modelLoader.loadModel( "models/mi28/disc.obj" );
+	if ( !disc )
+		exit( 1 );
+
+	ComplexModelBuilder cmBuilder;
+	auto mi28 = cmBuilder.addPart( mi28NoDisc, std::make_shared<NoModelPartBehavior>() )
+						 .addPart(
+								 disc, std::make_shared<RotationModelPartBehavior>(
+										 5.0f, glm::vec3( 0.0f, 1.0f, 0.0f )
+								 ), glm::vec3( 0.0f, 0.62f, 0.4f )
+						 )
+						 .construct();
+	mi28->scale( 0.2f, 0.2f, 0.2f ).translate( -15.0f, 10.0f, 0.0f );
 
 	glCall( glEnable( GL_DEPTH_TEST ) );
+
+	glm::vec3 transVector( 0.02f, -0.5f, 0.0f );
+	float angle = 0.8f;
 
 	// render loop
 	while ( !glfwWindowShouldClose( window ) )
@@ -189,13 +164,10 @@ int main()
 		glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
 		glm::mat4 view = camera.viewMatrix();
-		ib.bind();
 
-		lightVa.bind();
 		lightShader.bind();
 		lightShader.setMatrix( "view", view );
-
-		glCall( glDrawElements( GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr ) );
+		iceBall->draw( lightShader );
 
 		shader.bind();
 		shader.setMatrix( "view", view );
@@ -203,7 +175,19 @@ int main()
 		shader.setVector( "spotLights[0].position", camera.getPosition() );
 		shader.setVector( "spotLights[0].direction", camera.getFront() );
 
-		backpack.draw( shader );
+		sun.move();
+		sun.setInShader( shader, "directionalLight" );
+
+		transVector += glm::vec3( 0.0f, 0.0f, 0.02f );
+//		angle += 0.1f;
+		mi28->translate( 0.0f, 0.0f, 0.2f )
+			.rotate( angle, 0.0f, 1.0f, 0.0f );
+
+		ground->draw( shader );
+		statue->draw( shader );
+		building->draw( shader );
+		pripyat->draw( shader );
+		mi28->draw( shader );
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glCall( glfwSwapBuffers( window ) );

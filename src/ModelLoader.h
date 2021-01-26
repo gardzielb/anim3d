@@ -5,7 +5,6 @@
 #pragma once
 
 #include "Model.h"
-#include <optional>
 #include <vector>
 #include <assimp/scene.h>
 
@@ -14,17 +13,16 @@ class ModelLoader
 {
 private:
 	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-	std::vector<Texture> textures_loaded;
-	std::vector<Mesh> meshes;
+	std::vector<Texture> texturesLoaded;
 	std::string directory;
 
 public:
-	std::optional<SimpleModel> loadModel( const std::string & path, const glm::mat4 & modelMatrix );
+	std::shared_ptr<SimpleModel> loadModel( const std::string & path );
 
 private:
-	void processNode( aiNode * node, const aiScene * scene );
+	void processNode( aiNode * node, const aiScene * scene, MeshesPtr & meshes );
 
-	void processMesh( aiMesh * mesh, const aiScene * scene );
+	void processMesh( aiMesh * mesh, const aiScene * scene, MeshesPtr & meshes );
 
 	std::vector<Texture> loadMaterialTextures( aiMaterial * mat, aiTextureType type, std::string typeName );
 

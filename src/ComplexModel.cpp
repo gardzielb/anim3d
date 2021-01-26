@@ -4,43 +4,36 @@
 
 #include "ComplexModel.h"
 
-ComplexModel::ComplexModel( const std::vector<std::pair<ModelPtr, BehaviorPtr>> & parts )
+ComplexModel::ComplexModel( const std::vector<std::tuple<ModelPtr, BehaviorPtr, glm::vec3>> & parts )
 		: parts( std::move( parts ) )
 {}
-
-Model & ComplexModel::translate( const glm::vec3 & vector )
-{
-	for ( auto &[model, _] : parts )
-	{
-		model->translate( vector );
-	}
-	return *this;
-}
-
-Model & ComplexModel::scale( const glm::vec3 & scaleVector )
-{
-	for ( auto &[model, _] : parts )
-	{
-		model->scale( scaleVector );
-	}
-	return *this;
-}
-
-Model & ComplexModel::rotate( float angle, const glm::vec3 & rotationAxis )
-{
-	for ( auto &[model, _] : parts )
-	{
-		model->rotate( angle, rotationAxis );
-	}
-	return *this;
-}
 
 void ComplexModel::draw( const Shader & shader )
 {
 	for ( auto & part : parts )
 	{
-		auto &[model, behavior] = part;
+		auto &[model, behavior, offset] = part;
+		model->toOrigin().transform( modelMatrix ).translate( offset );
 		behavior->apply( model );
 		model->draw( shader );
 	}
+}
+
+ComplexModelBuilder & ComplexModelBuilder::reset()
+{
+	parts.clear();
+	return *this;
+}
+
+ComplexModelBuilder & ComplexModelBuilder::addPart( ComplexModelBuilder::ModelPtr model,
+													ComplexModelBuilder::BehaviorPtr behavior,
+													const glm::vec3 & offset )
+{
+	parts.emplace_back( model, behavior, offset );
+	return *this;
+}
+
+std::shared_ptr<ComplexModel> ComplexModelBuilder::construct() const
+{
+	return std::make_shared<ComplexModel>( parts );
 }

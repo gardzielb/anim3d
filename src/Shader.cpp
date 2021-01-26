@@ -62,25 +62,6 @@ void Shader::setVector( const std::string & name, const glm::vec3 & vector ) con
 	glUniform3fv( glGetUniformLocation( programId, name.c_str() ), 1, glm::value_ptr( vector ) );
 }
 
-//void Shader::setMaterial( const Material & material ) const
-//{
-//	setVector( "material.ambient", material.ambient );
-//	setVector( "material.diffuse", material.diffuse );
-//	setVector( "material.specular", material.specular );
-//	setFloat( "material.shininess", material.shininess );
-//}
-
-//void Shader::setMaterial( const TextureMaterial & material ) const
-//{
-//	material.diffuseMap.bind( GL_TEXTURE0 );
-//	setInt( "material.diffuse", 0 );
-//
-//	material.specularMap.bind( GL_TEXTURE1 );
-//	setInt( "material.specular", 1 );
-//
-//	setFloat( "material.shininess", material.shininess );
-//}
-
 unsigned int Shader::createShader( const std::string & vertexSource, const std::string & fragmentSource )
 {
 	unsigned int program = glCreateProgram();

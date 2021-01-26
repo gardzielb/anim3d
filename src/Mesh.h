@@ -36,14 +36,13 @@ private:
 	VertexArray vertexArray;
 	IndexBuffer indexBuffer;
 	std::vector<Texture> textures;
-	std::vector<Vertex> vertices;
 
 public:
 	Mesh( const std::vector<Vertex> & vertices, const std::vector<unsigned int> & indices,
 		  const std::vector<Texture> & textures )
 			: indexBuffer( &indices[0], indices.size() ),
 			  vertexBuffer( &vertices[0], vertices.size() * sizeof( Vertex ) ),
-			  textures( std::move( textures ) ), vertices( std::move( vertices ) )
+			  textures( std::move( textures ) )
 	{
 		VertexBufferLayout vbLayout;
 

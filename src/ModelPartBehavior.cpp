@@ -10,9 +10,13 @@ void NoModelPartBehavior::apply( ModelPtr & model ) const
 
 void RotationModelPartBehavior::apply( ModelPtr & model ) const
 {
-	model->rotate( angle, rotationAxis );
+	currentAngle += rotationAngle;
+	if ( currentAngle > 360 )
+		currentAngle = 0.0f;
+
+	model->rotate( currentAngle, rotationAxis );
 }
 
 RotationModelPartBehavior::RotationModelPartBehavior( float angle, const glm::vec3 & rotationAxis )
-		: angle( angle ), rotationAxis( rotationAxis )
+		: currentAngle( 0.0f ), rotationAngle( angle ), rotationAxis( rotationAxis )
 {}
