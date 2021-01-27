@@ -19,15 +19,16 @@ void Sun::move()
 //	light.specular = intensity * fullLight.specular;
 }
 
-void Sun::setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const
+void Sun::setInShader( const Shader & shader ) const
 {
+	light.setInShader( shader, "directionalLight" );
 	glm::mat4 rotationMatrix = glm::rotate(
 			glm::mat4( 1.0f ), glm::radians( currentAngle ), rotationAxis
 	);
 	glm::vec4 pos = rotationMatrix * glm::vec4( glm::vec3( -1.0f, 0.0f, 0.0f ), 1.0f );
-	shader.setVector( sourceName + ".direction", -glm::vec3( pos ) );
+	shader.setVector( "directionalLight.direction", -glm::vec3( pos ) );
 }
 
 Sun::Sun( const Light & light, float rotationAngle )
-		: LightSource( light ), fullLight( light ), rotationAngle( rotationAngle ), rotationAxis( 0.0f, 0.0f, 1.0f )
+		: light( light ), fullLight( light ), rotationAngle( rotationAngle ), rotationAxis( 0.0f, 0.0f, 1.0f )
 {}

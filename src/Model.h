@@ -3,10 +3,21 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include <memory>
+#include <list>
+
+
+class ModelObserver
+{
+public:
+	virtual void update( const glm::mat4 & transformationMatrix ) = 0;
+};
 
 
 class Model
 {
+private:
+	std::vector<std::shared_ptr<ModelObserver>> observers;
+
 protected:
 	glm::mat4 modelMatrix;
 
@@ -26,6 +37,11 @@ public:
 
 	Model & toOrigin();
 
+	inline void addObserver( const std::shared_ptr<ModelObserver> & observer )
+	{
+		observers.push_back( observer );
+	}
+
 	inline Model & rotate( float angle, float x, float y, float z )
 	{
 		return rotate( angle, glm::vec3( x, y, z ) );
@@ -40,6 +56,9 @@ public:
 	{
 		return translate( glm::vec3( x, y, z ) );
 	}
+
+protected:
+	void notifyObservers();
 };
 
 

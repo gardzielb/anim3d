@@ -35,7 +35,8 @@ private:
 public:
 	ComplexModelBuilder & reset();
 
-	ComplexModelBuilder & addPart( ModelPtr model, BehaviorPtr behavior, const glm::vec3 & offset = glm::vec3() );
+	ComplexModelBuilder & addPart( const ModelPtr & model, const BehaviorPtr & behavior,
+								   const glm::vec3 & offset = glm::vec3() );
 
 	std::shared_ptr<ComplexModel> construct() const;
 };

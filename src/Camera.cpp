@@ -57,3 +57,9 @@ void Camera::rotate( float xOffset, float yOffset )
 	front.z = sin( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
 	direction = -glm::normalize( front );
 }
+
+void Camera::update( const glm::mat4 & transformationMatrix )
+{
+	glm::vec4 pos4( position, 1.0f );
+	position = glm::vec3( transformationMatrix * pos4 );
+}

@@ -8,6 +8,7 @@
 #include <glm/vec3.hpp>
 #include <vector>
 #include "Shader.h"
+#include "Model.h"
 
 
 struct Light
@@ -15,18 +16,23 @@ struct Light
 	glm::vec3 ambient;
 	glm::vec3 diffuse;
 	glm::vec3 specular;
+
+	void setInShader( const Shader & shader, const std::string & sourceName ) const;
 };
 
 
-class LightSource
+class LightSource : public ModelObserver
 {
-protected:
+private:
 	Light light;
+	glm::vec3 position;
 
 public:
-	LightSource( const Light & light );
+	LightSource( const Light & light, const glm::vec3 & position );
 
 	void setInShader( const Shader & shader, const std::string & sourceName ) const;
+
+	void update( const glm::mat4 & transformationMatrix ) override;
 
 protected:
 	virtual void setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const = 0;
@@ -38,7 +44,6 @@ protected:
 class PointLightSource : public LightSource
 {
 private:
-	glm::vec3 position;
 	float constant = 1.0f;
 	float linear;
 	float quadratic;
@@ -54,7 +59,6 @@ protected:
 class SpotLightSource : public LightSource
 {
 private:
-	glm::vec3 position;
 	glm::vec3 direction;
 	float innerCutOff, outerCutOff;
 	float constant = 1.0f;
@@ -73,18 +77,18 @@ protected:
 class LightSourceSet
 {
 private:
-	std::vector<PointLightSource> pointLightSources;
-	std::vector<SpotLightSource> spotLightSources;
+	std::vector<std::shared_ptr<PointLightSource>> pointLightSources;
+	std::vector<std::shared_ptr<SpotLightSource>> spotLightSources;
 
 public:
 	LightSourceSet( int pointCount, int spotCount );
 
-	inline void addPointLightSource( const PointLightSource & lightSource )
+	inline void addPointLightSource( const std::shared_ptr<PointLightSource> & lightSource )
 	{
 		pointLightSources.push_back( lightSource );
 	}
 
-	inline void addSpotLightSource( const SpotLightSource & lightSource )
+	inline void addSpotLightSource( const std::shared_ptr<SpotLightSource> & lightSource )
 	{
 		spotLightSources.push_back( lightSource );
 	}

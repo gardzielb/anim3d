@@ -9,10 +9,10 @@
 #include "LightSource.h"
 
 
-class Sun : public LightSource
+class Sun
 {
 private:
-	Light fullLight;
+	Light fullLight, light;
 	glm::vec3 rotationAxis;
 	float rotationAngle;
 	float currentAngle = 0.0f;
@@ -22,9 +22,5 @@ public:
 
 	void move();
 
-protected:
-	void setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const override;
+	void setInShader( const Shader & shader ) const;
 };
-
-
-

@@ -12,12 +12,12 @@ void LightSourceSet::setInShader( const Shader & shader ) const
 
 	for ( int i = 0; i < pointLightSources.size(); i++ )
 	{
-		pointLightSources[i].setInShader( shader, "pointLights[" + std::to_string( i ) + "]" );
+		pointLightSources[i]->setInShader( shader, "pointLights[" + std::to_string( i ) + "]" );
 	}
 
 	for ( int i = 0; i < spotLightSources.size(); i++ )
 	{
-		spotLightSources[i].setInShader( shader, "spotLights[" + std::to_string( i ) + "]" );
+		spotLightSources[i]->setInShader( shader, "spotLights[" + std::to_string( i ) + "]" );
 	}
 }
 
@@ -27,25 +27,23 @@ LightSourceSet::LightSourceSet( int pointCount, int spotCount )
 	spotLightSources.reserve( spotCount );
 }
 
-LightSource::LightSource( const Light & light )
-		: light( light )
+LightSource::LightSource( const Light & light, const glm::vec3 & position )
+		: light( light ), position( position )
 {}
 
 void LightSource::setInShader( const Shader & shader, const std::string & sourceName ) const
 {
-	shader.setVector( sourceName + ".ambient", light.ambient );
-	shader.setVector( sourceName + ".diffuse", light.diffuse );
-	shader.setVector( sourceName + ".specular", light.specular );
+	light.setInShader( shader, sourceName );
+	shader.setVector( sourceName + ".position", position );
 	setInShaderTypeSpecific( shader, sourceName );
 }
 
 PointLightSource::PointLightSource( const Light & light, const glm::vec3 & position, float linear, float quadratic )
-		: LightSource( light ), position( position ), linear( linear ), quadratic( quadratic )
+		: LightSource( light, position ), linear( linear ), quadratic( quadratic )
 {}
 
 void PointLightSource::setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const
 {
-	shader.setVector( sourceName + ".position", position );
 	shader.setFloat( sourceName + ".constant", constant );
 	shader.setFloat( sourceName + ".linear", linear );
 	shader.setFloat( sourceName + ".quadratic", quadratic );
@@ -53,17 +51,29 @@ void PointLightSource::setInShaderTypeSpecific( const Shader & shader, const std
 
 SpotLightSource::SpotLightSource( const Light & light, const glm::vec3 & position, const glm::vec3 & direction,
 								  float innerCutOff, float outerCutOff, float linear, float quadratic )
-		: LightSource( light ), position( position ), direction( direction ), innerCutOff( innerCutOff ),
+		: LightSource( light, position ), direction( direction ), innerCutOff( innerCutOff ),
 		  outerCutOff( outerCutOff ), linear( linear ), quadratic( quadratic )
 {}
 
 void SpotLightSource::setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const
 {
-	shader.setVector( sourceName + ".position", position );
 	shader.setVector( sourceName + ".direction", direction );
-	shader.setFloat( sourceName + ".innerCutOff", innerCutOff );
-	shader.setFloat( sourceName + ".outerCutOff", outerCutOff );
+	shader.setFloat( sourceName + ".innerCutOff", std::cos( innerCutOff ) );
+	shader.setFloat( sourceName + ".outerCutOff", std::cos( outerCutOff ) );
 	shader.setFloat( sourceName + ".constant", constant );
 	shader.setFloat( sourceName + ".linear", linear );
 	shader.setFloat( sourceName + ".quadratic", quadratic );
+}
+
+void Light::setInShader( const Shader & shader, const std::string & sourceName ) const
+{
+	shader.setVector( sourceName + ".ambient", ambient );
+	shader.setVector( sourceName + ".diffuse", diffuse );
+	shader.setVector( sourceName + ".specular", specular );
+}
+
+void LightSource::update( const glm::mat4 & transformationMatrix )
+{
+	glm::vec4 pos4( position, 1.0f );
+	position = glm::vec3( transformationMatrix * pos4 );
 }

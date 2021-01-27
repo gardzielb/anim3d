@@ -5,9 +5,10 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include "Model.h"
 
 
-class Camera
+class Camera : public ModelObserver
 {
 private:
 	glm::vec3 position;
@@ -21,6 +22,8 @@ private:
 
 public:
 	Camera( glm::vec3 position, glm::vec3 target, float speed );
+
+	void update( const glm::mat4 & transformationMatrix ) override;
 
 	inline const glm::vec3 & getPosition() const
 	{

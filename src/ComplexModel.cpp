@@ -25,8 +25,7 @@ ComplexModelBuilder & ComplexModelBuilder::reset()
 	return *this;
 }
 
-ComplexModelBuilder & ComplexModelBuilder::addPart( ComplexModelBuilder::ModelPtr model,
-													ComplexModelBuilder::BehaviorPtr behavior,
+ComplexModelBuilder & ComplexModelBuilder::addPart( const ModelPtr & model, const BehaviorPtr & behavior,
 													const glm::vec3 & offset )
 {
 	parts.emplace_back( model, behavior, offset );
