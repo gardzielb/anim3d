@@ -5,7 +5,7 @@
 #include "populate.h"
 
 
-static std::shared_ptr<SimpleModel> loadModel( ModelLoader & loader, const std::string & path )
+std::shared_ptr<SimpleModel> loadModel( ModelLoader & loader, const std::string & path )
 {
 	std::shared_ptr<SimpleModel> model = loader.loadModel( path );
 	if ( !model )
@@ -21,13 +21,10 @@ std::vector<std::shared_ptr<Model>> createStaticModels( ModelLoader & loader )
 	std::shared_ptr<SimpleModel> ground = loadModel( loader, "models/ground/ground2.obj" );
 	ground->translate( glm::vec3( 0.0f, -0.5f, 0.0f ) );
 
-	std::shared_ptr<SimpleModel> building = loadModel( loader, "models/building01/building01.obj" );
-	building->translate( glm::vec3( -4.0f, -0.5f, 0.0f ) );
-
 	std::shared_ptr<SimpleModel> pripyat = loadModel( loader, "models/pripyat/pripyat.obj" );
 	pripyat->translate( glm::vec3( 0.0f, -0.6f, -2.0f ) );
 
-	return { ground, statue, building, pripyat };
+	return { ground, statue, pripyat };
 }
 
 std::shared_ptr<ComplexModel> createChopper( ModelLoader & loader, const std::shared_ptr<SpotLightSource> & light )
@@ -44,7 +41,7 @@ std::shared_ptr<ComplexModel> createChopper( ModelLoader & loader, const std::sh
 						 )
 						 .construct();
 
-	mi28->scale( 0.2f, 0.2f, 0.2f ).translate( -15.0f, 10.0f, 0.0f );
+	mi28->scale( 0.2f, 0.2f, 0.2f ).translate( -20.0f, 15.0f, 0.0f );
 	mi28->addObserver( light );
 	return mi28;
 }

@@ -93,6 +93,7 @@ int main()
 	lightSet.setInShader( shader );
 
 	ModelLoader modelLoader;
+	auto buildings = createBuildings<14>( modelLoader );
 	auto lightModels = createPointLightModels( modelLoader, pointLights );
 	auto staticModels = createStaticModels( modelLoader );
 	std::shared_ptr<ComplexModel> mi28 = createChopper( modelLoader, spotLight );
@@ -126,8 +127,9 @@ int main()
 		lightSet.setInShader( shader );
 
 		mi28->translate( 0.0f, 0.0f, 0.15f ).rotate( 0.8f, 0.0f, 0.3f, 0.0f );
-
 		mi28->draw( shader );
+
+		buildings.drawAll( shader );
 		for ( auto & m : staticModels )
 			m->draw( shader );
 
