@@ -22,7 +22,7 @@
 
 void framebuffer_size_callback( GLFWwindow * window, int width, int height );
 
-void processInput( GLFWwindow * window, const std::shared_ptr<Camera> & camera );
+int processInput( GLFWwindow * window, int current );
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
@@ -64,15 +64,18 @@ int main()
 
 	glm::mat4 projection = glm::perspective( glm::radians( 45.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
 
-	std::shared_ptr<Camera> camera = std::make_shared<Camera>(
+	std::shared_ptr<Camera> staticCamera = std::make_shared<Camera>(
 			glm::vec3( 8.0f, 8.0f, 8.0f ), glm::vec3( -1.0f, -1.0f, -1.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
 	);
-//	std::shared_ptr<ModelBoundCamera> camera = std::make_shared<ModelBoundCamera>(
-//			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f ), glm::vec3( 0.0f, 1.0f, 0.0f )
-//	);
-//	std::shared_ptr<ModelObservingCamera> camera = std::make_shared<ModelObservingCamera>(
-//			glm::vec3( 0.0f, 1.0f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
-//	);
+	std::shared_ptr<ModelBoundCamera> chopperCamera = std::make_shared<ModelBoundCamera>(
+			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f ), glm::vec3( 0.0f, 1.0f, 0.0f )
+	);
+	std::shared_ptr<ModelObservingCamera> orcCamera = std::make_shared<ModelObservingCamera>(
+			glm::vec3( 0.0f, 1.0f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
+	);
+
+	std::array<std::shared_ptr<Camera>, 3> cameras = { staticCamera, chopperCamera, orcCamera };
+	int cameraIndex = 0;
 
 	Light flashLight = {
 			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 1.0f, 1.0f, 1.0f ), glm::vec3( 1.0f, 1.0f, 1.0f )
@@ -103,7 +106,8 @@ int main()
 	auto lightModels = createPointLightModels( modelLoader, pointLights );
 	auto staticModels = createStaticModels( modelLoader );
 	std::shared_ptr<ComplexModel> mi28 = createChopper( modelLoader, spotLight );
-//	mi28->addObserver( camera, glm::vec3( 0.0f, -0.5f, 0.0f ) );
+	mi28->addObserver( chopperCamera, glm::vec3( 0.0f, -0.5f, 0.0f ) );
+	mi28->addObserver( orcCamera );
 
 	glCall( glEnable( GL_DEPTH_TEST ) );
 
@@ -111,13 +115,13 @@ int main()
 	while ( !glfwWindowShouldClose( window ) )
 	{
 		// input
-		processInput( window, camera );
+		cameraIndex = processInput( window, cameraIndex );
 
 		// render
 		glCall( glClearColor( 0.2f, 0.2f, 0.2f, 1.0f ) );
 		glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
-		glm::mat4 view = camera->viewMatrix();
+		glm::mat4 view = cameras[cameraIndex]->viewMatrix();
 
 		lightShader.bind();
 		lightShader.setMatrix( "view", view );
@@ -127,7 +131,7 @@ int main()
 
 		shader.bind();
 		shader.setMatrix( "view", view );
-		shader.setVector( "viewPos", camera->getPosition() );
+		shader.setVector( "viewPos", cameras[cameraIndex]->getPosition() );
 
 		sun.move();
 		sun.setInShader( shader );
@@ -151,12 +155,21 @@ int main()
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput( GLFWwindow * window, const std::shared_ptr<Camera> & camera )
+int processInput( GLFWwindow * window, int current )
 {
 	if ( glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
 		glfwSetWindowShouldClose( window, true );
 
-//	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
+	if ( glfwGetKey( window, GLFW_KEY_1 ) == GLFW_PRESS )
+		return 0;
+	if ( glfwGetKey( window, GLFW_KEY_2 ) == GLFW_PRESS )
+		return 1;
+	if ( glfwGetKey( window, GLFW_KEY_3 ) == GLFW_PRESS )
+		return 2;
+
+	return current;
+
+	//	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
 //		camera->moveForward();
 //	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
 //		camera->moveBack();
