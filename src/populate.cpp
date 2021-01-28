@@ -19,7 +19,7 @@ std::vector<std::shared_ptr<Model>> createStaticModels( ModelLoader & loader )
 	statue->scale( glm::vec3( 0.4f, 0.4f, 0.4f ) );
 
 	std::shared_ptr<SimpleModel> ground = loadModel( loader, "models/ground/ground2.obj" );
-	ground->translate( glm::vec3( 0.0f, -0.5f, 0.0f ) );
+	ground->scale( 3.0f, 3.0f, 3.0f ).translate( glm::vec3( 0.0f, -0.5f, 0.0f ) );
 
 	std::shared_ptr<SimpleModel> pripyat = loadModel( loader, "models/pripyat/pripyat.obj" );
 	pripyat->translate( glm::vec3( 0.0f, -0.6f, -2.0f ) );
@@ -42,7 +42,7 @@ std::shared_ptr<ComplexModel> createChopper( ModelLoader & loader, const std::sh
 						 .construct();
 
 	mi28->scale( 0.2f, 0.2f, 0.2f ).translate( -20.0f, 15.0f, 0.0f );
-	mi28->addObserver( light );
+	mi28->addObserver( light, glm::vec3( 0.0f, -0.5f, 0.0f ) );
 	return mi28;
 }
 

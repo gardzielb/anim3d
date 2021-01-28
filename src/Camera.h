@@ -8,45 +8,57 @@
 #include "Model.h"
 
 
-class Camera : public ModelObserver
+class Camera
 {
-private:
+protected:
 	glm::vec3 position;
-	glm::vec3 direction;
+	glm::vec3 front;
 	glm::vec3 up;
 	glm::vec3 right;
-	const float speed;
-	float yaw = -90.0f;    // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-	float pitch = 0.0f;
-	float sensitivity = 0.5f; // change this value to your liking
+	glm::vec3 worldUp;
+//	const float speed;
+//	float yaw = -90.0f;    // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+//	float pitch = 0.0f;
+//	float sensitivity = 0.5f; // change this value to your liking
 
 public:
-	Camera( glm::vec3 position, glm::vec3 target, float speed );
-
-	void update( const glm::mat4 & transformationMatrix ) override;
+	Camera( const glm::vec3 & position, const glm::vec3 & front, const glm::vec3 & worldUp );
 
 	inline const glm::vec3 & getPosition() const
 	{
 		return position;
 	}
 
-	inline const glm::vec3 getFront() const
-	{
-		return -direction;
-	}
-
 	glm::mat4 viewMatrix();
 
-	void moveForward();
+//	void moveForward();
 
-	void moveBack();
+//	void moveBack();
 
-	void moveRight();
+//	void moveRight();
 
-	void moveLeft();
+//	void moveLeft();
 
-	void rotate( float xOffset, float yOffset );
+//	void rotate( float xOffset, float yOffset );
+
+//private:
+//	void updateVectors();
 };
 
 
+class ModelObservingCamera : public Camera, public ModelObserver
+{
+public:
+	ModelObservingCamera(const glm::vec3 & position, const glm::vec3 & front, const glm::vec3 & worldUp);
 
+	void update(const glm::mat4 &transformationMatrix) override;
+};
+
+
+class ModelBoundCamera : public Camera, public ModelObserver
+{
+public:
+	ModelBoundCamera(const glm::vec3 & position, const glm::vec3 & front, const glm::vec3 & worldUp);
+
+	void update(const glm::mat4 &transformationMatrix) override;
+};

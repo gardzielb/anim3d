@@ -16,7 +16,8 @@ public:
 class Model
 {
 private:
-	std::vector<std::shared_ptr<ModelObserver>> observers;
+	typedef std::pair<std::shared_ptr<ModelObserver>, glm::vec3> ObserverData;
+	std::vector<ObserverData> observers;
 
 protected:
 	glm::mat4 modelMatrix;
@@ -37,9 +38,9 @@ public:
 
 	Model & toOrigin();
 
-	inline void addObserver( const std::shared_ptr<ModelObserver> & observer )
+	inline void addObserver( const std::shared_ptr<ModelObserver> & observer, const glm::vec3 & offset = glm::vec3() )
 	{
-		observers.push_back( observer );
+		observers.push_back( std::make_pair( observer, offset ) );
 	}
 
 	inline Model & rotate( float angle, float x, float y, float z )

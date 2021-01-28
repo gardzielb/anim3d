@@ -65,14 +65,20 @@ int main()
 	glm::mat4 projection = glm::perspective( glm::radians( 45.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
 
 	std::shared_ptr<Camera> camera = std::make_shared<Camera>(
-			glm::vec3( 0.0f, 0.0f, 3.0f ), glm::vec3( 0.0f, 0.0f, 0.0f ), 0.1f
+			glm::vec3( 8.0f, 8.0f, 8.0f ), glm::vec3( -1.0f, -1.0f, -1.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
 	);
+//	std::shared_ptr<ModelBoundCamera> camera = std::make_shared<ModelBoundCamera>(
+//			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f ), glm::vec3( 0.0f, 1.0f, 0.0f )
+//	);
+//	std::shared_ptr<ModelObservingCamera> camera = std::make_shared<ModelObservingCamera>(
+//			glm::vec3( 0.0f, 1.0f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
+//	);
 
 	Light flashLight = {
 			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 1.0f, 1.0f, 1.0f ), glm::vec3( 1.0f, 1.0f, 1.0f )
 	};
 	auto spotLight = std::make_shared<SpotLightSource>(
-			flashLight, glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, -1.0f, 0.0f ), glm::radians( 12.5 ),
+			flashLight, glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f ), glm::radians( 12.5 ),
 			glm::radians( 15.0 ), 0.09f, 0.032f
 	);
 	auto pointLights = createPointLightSources();
@@ -97,6 +103,7 @@ int main()
 	auto lightModels = createPointLightModels( modelLoader, pointLights );
 	auto staticModels = createStaticModels( modelLoader );
 	std::shared_ptr<ComplexModel> mi28 = createChopper( modelLoader, spotLight );
+//	mi28->addObserver( camera, glm::vec3( 0.0f, -0.5f, 0.0f ) );
 
 	glCall( glEnable( GL_DEPTH_TEST ) );
 
@@ -126,7 +133,7 @@ int main()
 		sun.setInShader( shader );
 		lightSet.setInShader( shader );
 
-		mi28->translate( 0.0f, 0.0f, 0.15f ).rotate( 0.8f, 0.0f, 0.3f, 0.0f );
+		mi28->translate( 0.0f, 0.0f, 0.1f ).rotate( 0.3f, 0.0f, 0.3f, 0.0f );
 		mi28->draw( shader );
 
 		buildings.drawAll( shader );
@@ -149,23 +156,23 @@ void processInput( GLFWwindow * window, const std::shared_ptr<Camera> & camera )
 	if ( glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
 		glfwSetWindowShouldClose( window, true );
 
-	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
-		camera->moveForward();
-	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
-		camera->moveBack();
-	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
-		camera->moveLeft();
-	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
-		camera->moveRight();
-
-	if ( glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS )
-		camera->rotate( 0.0f, 2.0f );
-	if ( glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS )
-		camera->rotate( 0.0f, -2.0f );
-	if ( glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS )
-		camera->rotate( 2.0f, 0.0f );
-	if ( glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS )
-		camera->rotate( -2.0f, 0.0f );
+//	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
+//		camera->moveForward();
+//	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
+//		camera->moveBack();
+//	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
+//		camera->moveLeft();
+//	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
+//		camera->moveRight();
+//
+//	if ( glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS )
+//		camera->rotate( 0.0f, 2.0f );
+//	if ( glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS )
+//		camera->rotate( 0.0f, -2.0f );
+//	if ( glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS )
+//		camera->rotate( 2.0f, 0.0f );
+//	if ( glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS )
+//		camera->rotate( -2.0f, 0.0f );
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

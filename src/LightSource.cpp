@@ -74,6 +74,6 @@ void Light::setInShader( const Shader & shader, const std::string & sourceName )
 
 void LightSource::update( const glm::mat4 & transformationMatrix )
 {
-	glm::vec4 pos4( position, 1.0f );
-	position = glm::vec3( transformationMatrix * pos4 );
+	glm::vec4 pos4 = transformationMatrix * glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f );
+	position = glm::vec3( pos4 );
 }

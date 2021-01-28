@@ -54,8 +54,9 @@ Model & Model::transform( const glm::mat4 & matrix )
 
 void Model::notifyObservers()
 {
-	for ( auto & observer : observers )
+	for ( auto &[observer, offset] : observers )
 	{
-		observer->update( modelMatrix );
+		glm::mat4 transMatrix = glm::translate( modelMatrix, offset );
+		observer->update( transMatrix );
 	}
 }
