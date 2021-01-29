@@ -68,57 +68,31 @@ int main()
 	stbi_set_flip_vertically_on_load( true );
 
 	Shader shader( "../src/shaders/phong" );
-	Shader lightShader( "../src/shaders/light" );
+	Shader geoPassShader( "../src/shaders/phong/vertex.shader", "../src/shaders/phong/geopass.shader" );
 
 	glm::mat4 projection = glm::perspective( glm::radians( 45.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
 
-	std::shared_ptr<Camera> staticCamera = std::make_shared<Camera>(
+	std::shared_ptr<Camera> camera = std::make_shared<Camera>(
 			glm::vec3( 8.0f, 8.0f, 8.0f ), glm::vec3( -1.0f, -1.0f, -1.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
 	);
-	std::shared_ptr<ModelBoundCamera> chopperCamera = std::make_shared<ModelBoundCamera>(
-			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f ), glm::vec3( 0.0f, 1.0f, 0.0f )
-	);
-	std::shared_ptr<ModelObservingCamera> orcCamera = std::make_shared<ModelObservingCamera>(
-			glm::vec3( 0.0f, 1.0f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f ), glm::vec3( 0.0f, 1.0f, 0.0f )
-	);
 
-	std::array<std::shared_ptr<Camera>, 3> cameras = { staticCamera, chopperCamera, orcCamera };
-	int cameraIndex = 0;
-
-	Light flashLight = {
-			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 1.0f, 1.0f, 1.0f ), glm::vec3( 1.0f, 1.0f, 1.0f )
-	};
-	auto spotLight = std::make_shared<SpotLightSource>(
-			flashLight, glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f ), glm::radians( 12.5 ),
-			glm::radians( 15.0 ), 0.09f, 0.032f
-	);
 	auto pointLights = createPointLightSources();
-
-	LightSourceSet lightSet( pointLights.size(), 1 );
-	lightSet.addSpotLightSource( spotLight );
+	LightSourceSet lightSet( pointLights.size(), 0 );
 	for ( auto & light : pointLights )
 		lightSet.addPointLightSource( light );
 
 	Sun sun = createSun();
-	Fog fog = { 0.05f, glm::vec3( 0.6f, 0.6f, 0.6f ) };
 
-	lightShader.bind();
-	lightShader.setMatrix( "projection", projection );
+	geoPassShader.bind();
+	geoPassShader.setMatrix( "projection", projection );
 
 	shader.bind();
 	shader.setMatrix( "projection", projection );
-	shader.setFloat( "material.shininess", 64.0f );
-	shader.setFloat( "fog.density", fog.density );
-	shader.setVector( "fog.color", fog.color );
+	shader.setFloat( "shininess", 64.0f );
 	lightSet.setInShader( shader );
 
 	ModelLoader modelLoader;
-	auto buildings = createBuildings<14>( modelLoader );
-	auto lightModels = createPointLightModels( modelLoader, pointLights );
-	auto staticModels = createStaticModels( modelLoader );
-	std::shared_ptr<ComplexModel> mi28 = createChopper( modelLoader, spotLight );
-	mi28->addObserver( chopperCamera, glm::vec3( 0.0f, -0.5f, 0.0f ) );
-	mi28->addObserver( orcCamera );
+	std::shared_ptr<SimpleModel> model = modelLoader.loadModel( "models/backpack/backpack.obj" );
 
 	glCall( glEnable( GL_DEPTH_TEST ) );
 
@@ -126,40 +100,24 @@ int main()
 	while ( !glfwWindowShouldClose( window ) )
 	{
 		// render
-		glCall( glClearColor( fog.color.r, fog.color.g, fog.color.b, fog.density ) );
+		glCall( glClearColor( 0.1f, 0.1f, 0.1f, 1.0f ) );
 		glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
-		glm::mat4 view = cameras[cameraIndex]->viewMatrix();
-
-		lightShader.bind();
-		lightShader.setMatrix( "view", view );
-
-		for ( auto & m : lightModels )
-			m->draw( lightShader );
+		glm::mat4 view = camera->viewMatrix();
 
 		shader.bind();
 		shader.setMatrix( "view", view );
-		shader.setVector( "viewPos", cameras[cameraIndex]->getPosition() );
+		shader.setVector( "viewPos", camera->getPosition() );
 
 		sun.move();
 		sun.setInShader( shader );
 		lightSet.setInShader( shader );
 
-		mi28->translate( 0.0f, 0.0f, 0.1f ).rotate( 0.3f, 0.0f, 0.3f, 0.0f );
-		mi28->draw( shader );
-
-		buildings.drawAll( shader );
-		for ( auto & m : staticModels )
-			m->draw( shader );
+		model->draw( shader );
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glCall( glfwSwapBuffers( window ) );
 		glCall( glfwPollEvents() );
-
-		// input
-		glm::vec3 heliPos = mi28->offset();
-		glm::vec3 heliDir = glm::cross( -heliPos, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-		cameraIndex = processInput( window, cameraIndex, spotLight, heliDir, -heliPos );
 	}
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
