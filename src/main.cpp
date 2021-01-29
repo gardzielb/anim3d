@@ -22,11 +22,19 @@
 
 void framebuffer_size_callback( GLFWwindow * window, int width, int height );
 
-int processInput( GLFWwindow * window, int current );
+int processInput( GLFWwindow * window, int current, const std::shared_ptr<SpotLightSource> & heliLight,
+				  const glm::vec3 & heliFront, const glm::vec3 & heliRight );
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
+
+
+struct Fog
+{
+	float density;
+	glm::vec3 color;
+};
 
 
 int main()
@@ -92,6 +100,7 @@ int main()
 		lightSet.addPointLightSource( light );
 
 	Sun sun = createSun();
+	Fog fog = { 0.05f, glm::vec3( 0.6f, 0.6f, 0.6f ) };
 
 	lightShader.bind();
 	lightShader.setMatrix( "projection", projection );
@@ -99,6 +108,8 @@ int main()
 	shader.bind();
 	shader.setMatrix( "projection", projection );
 	shader.setFloat( "material.shininess", 64.0f );
+	shader.setFloat( "fog.density", fog.density );
+	shader.setVector( "fog.color", fog.color );
 	lightSet.setInShader( shader );
 
 	ModelLoader modelLoader;
@@ -114,11 +125,8 @@ int main()
 	// render loop
 	while ( !glfwWindowShouldClose( window ) )
 	{
-		// input
-		cameraIndex = processInput( window, cameraIndex );
-
 		// render
-		glCall( glClearColor( 0.2f, 0.2f, 0.2f, 1.0f ) );
+		glCall( glClearColor( fog.color.r, fog.color.g, fog.color.b, fog.density ) );
 		glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
 		glm::mat4 view = cameras[cameraIndex]->viewMatrix();
@@ -147,6 +155,11 @@ int main()
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glCall( glfwSwapBuffers( window ) );
 		glCall( glfwPollEvents() );
+
+		// input
+		glm::vec3 heliPos = mi28->offset();
+		glm::vec3 heliDir = glm::cross( -heliPos, glm::vec3( 0.0f, 1.0f, 0.0f ) );
+		cameraIndex = processInput( window, cameraIndex, spotLight, heliDir, -heliPos );
 	}
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
@@ -155,10 +168,20 @@ int main()
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-int processInput( GLFWwindow * window, int current )
+int processInput( GLFWwindow * window, int current, const std::shared_ptr<SpotLightSource> & heliLight,
+				  const glm::vec3 & heliFront, const glm::vec3 & heliRight )
 {
 	if ( glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
 		glfwSetWindowShouldClose( window, true );
+
+	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
+		heliLight->rotate( heliRight, 0.01f );
+	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
+		heliLight->rotate( -heliRight, 0.01f );
+	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
+		heliLight->rotate( heliFront, 0.01f );
+	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
+		heliLight->rotate( -heliFront, 0.01f );
 
 	if ( glfwGetKey( window, GLFW_KEY_1 ) == GLFW_PRESS )
 		return 0;
@@ -169,15 +192,6 @@ int processInput( GLFWwindow * window, int current )
 
 	return current;
 
-	//	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
-//		camera->moveForward();
-//	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
-//		camera->moveBack();
-//	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
-//		camera->moveLeft();
-//	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
-//		camera->moveRight();
-//
 //	if ( glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS )
 //		camera->rotate( 0.0f, 2.0f );
 //	if ( glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS )

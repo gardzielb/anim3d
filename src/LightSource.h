@@ -69,6 +69,8 @@ public:
 	SpotLightSource( const Light & light, const glm::vec3 & position, const glm::vec3 & direction, float innerCutOff,
 					 float outerCutOff, float linear, float quadratic );
 
+	void rotate( const glm::vec3 & axis, float angle );
+
 protected:
 	void setInShaderTypeSpecific( const Shader & shader, const std::string & sourceName ) const override;
 };

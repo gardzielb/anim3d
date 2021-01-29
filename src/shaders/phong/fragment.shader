@@ -3,6 +3,12 @@
 #define NR_POINT_LIGHTS 5
 #define NR_SPOT_LIGHTS 5
 
+struct Fog
+{
+	vec3 color;
+	float density;
+};
+
 struct Material
 {
 	sampler2D diffuse1;
@@ -48,6 +54,7 @@ uniform int pointCount;
 uniform int spotCount;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform SpotLight spotLights[NR_SPOT_LIGHTS];
+uniform Fog fog;
 
 uniform Material material;
 uniform vec3 viewPos;
@@ -61,6 +68,7 @@ out vec4 FragColor;
 vec3 computeSpotLight(SpotLight light, vec3 normal, vec3 viewDir);
 vec3 computePointLight(PointLight light, vec3 normal, vec3 viewDir);
 vec3 computeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir);
+float getFogFactor(Fog fog, float fogCoordinate);
 
 
 void main()
@@ -80,7 +88,8 @@ void main()
 		color += computeSpotLight(spotLights[i], normal, viewDir);
 	}
 
-	FragColor = vec4(color, 1.0);
+	float fogCoordinate = length(FragPos - viewPos);
+	FragColor = mix(vec4(color, 1.0), vec4(fog.color, 1.0), getFogFactor(fog, fogCoordinate));
 }
 
 
@@ -143,4 +152,10 @@ vec3 computeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)
 	vec3 diffuse  = light.diffuse * diff * vec3(texture(material.diffuse1, TexCoords));
 	vec3 specular = light.specular * spec * vec3(texture(material.specular1, TexCoords));
 	return ambient + diffuse + specular;
+}
+
+float getFogFactor(Fog fog, float fogCoordinate)
+{
+	float result = exp(-pow(fog.density * fogCoordinate, 2.0));
+	return 1.0 - clamp(result, 0.0, 1.0);
 }

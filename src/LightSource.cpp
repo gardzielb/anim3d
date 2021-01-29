@@ -65,6 +65,13 @@ void SpotLightSource::setInShaderTypeSpecific( const Shader & shader, const std:
 	shader.setFloat( sourceName + ".quadratic", quadratic );
 }
 
+void SpotLightSource::rotate( const glm::vec3 & axis, float angle )
+{
+	glm::mat4 matrix = glm::rotate( glm::mat4( 1.0f ), angle, axis );
+	glm::vec4 dir4 = matrix * glm::vec4( direction, 1.0f );
+	direction = glm::vec3( dir4 );
+}
+
 void Light::setInShader( const Shader & shader, const std::string & sourceName ) const
 {
 	shader.setVector( sourceName + ".ambient", ambient );

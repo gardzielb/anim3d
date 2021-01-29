@@ -58,16 +58,20 @@ public:
 		return translate( glm::vec3( x, y, z ) );
 	}
 
+	inline glm::vec3 offset() const
+	{
+		return glm::vec3( modelMatrix * glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	}
+
 protected:
 	void notifyObservers();
 };
 
 
-typedef std::shared_ptr<std::vector<Mesh>> MeshesPtr;
-
 class SimpleModel : public Model
 {
 private:
+	typedef std::shared_ptr<std::vector<Mesh>> MeshesPtr;
 	MeshesPtr meshes;
 
 public:
