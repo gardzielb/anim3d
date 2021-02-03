@@ -18,12 +18,16 @@
 #include <spdlog/spdlog.h>
 
 #include "populate.h"
+#include "GeometryBuffer.h"
 
 
 void framebuffer_size_callback( GLFWwindow * window, int width, int height );
 
 int processInput( GLFWwindow * window, int current, const std::shared_ptr<SpotLightSource> & heliLight,
 				  const glm::vec3 & heliFront, const glm::vec3 & heliRight );
+
+void renderQuad();
+
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
@@ -67,8 +71,9 @@ int main()
 // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
 	stbi_set_flip_vertically_on_load( true );
 
-	Shader shader( "../src/shaders/phong" );
-	Shader lightShader( "../src/shaders/light" );
+	Shader lightingShader( "../src/shaders/phong/lighting" );
+	Shader geoPassShader( "../src/shaders/phong/geopass" );
+//	Shader lightSourceShader( "../src/shaders/light" );
 
 	glm::mat4 projection = glm::perspective( glm::radians( 45.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
 
@@ -102,15 +107,8 @@ int main()
 	Sun sun = createSun();
 	Fog fog = { 0.05f, glm::vec3( 0.6f, 0.6f, 0.6f ) };
 
-	lightShader.bind();
-	lightShader.setMatrix( "projection", projection );
-
-	shader.bind();
-	shader.setMatrix( "projection", projection );
-	shader.setFloat( "material.shininess", 64.0f );
-	shader.setFloat( "fog.density", fog.density );
-	shader.setVector( "fog.color", fog.color );
-	lightSet.setInShader( shader );
+//	lightSourceShader.bind();
+//	lightSourceShader.setMatrix( "projection", projection );
 
 	ModelLoader modelLoader;
 	auto buildings = createBuildings<14>( modelLoader );
@@ -122,6 +120,18 @@ int main()
 
 	glCall( glEnable( GL_DEPTH_TEST ) );
 
+	GeometryBuffer gBuffer( SCR_WIDTH, SCR_HEIGHT );
+
+	geoPassShader.bind();
+	geoPassShader.setMatrix( "projection", projection );
+
+	lightingShader.bind();
+	lightingShader.setFloat( "shininess", 64.0f );
+	lightingShader.setFloat( "fog.density", fog.density );
+	lightingShader.setVector( "fog.color", fog.color );
+	lightSet.setInShader( lightingShader );
+	gBuffer.setShaderTextures( lightingShader );
+
 	// render loop
 	while ( !glfwWindowShouldClose( window ) )
 	{
@@ -129,28 +139,32 @@ int main()
 		glCall( glClearColor( fog.color.r, fog.color.g, fog.color.b, fog.density ) );
 		glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
-		glm::mat4 view = cameras[cameraIndex]->viewMatrix();
+		// --------------------------------- GEOMETRY PASS ----------------------------------------
+		gBuffer.bind();
+		glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
-		lightShader.bind();
-		lightShader.setMatrix( "view", view );
-
-		for ( auto & m : lightModels )
-			m->draw( lightShader );
-
-		shader.bind();
-		shader.setMatrix( "view", view );
-		shader.setVector( "viewPos", cameras[cameraIndex]->getPosition() );
-
-		sun.move();
-		sun.setInShader( shader );
-		lightSet.setInShader( shader );
+		geoPassShader.bind();
+		geoPassShader.setMatrix( "view", cameras[cameraIndex]->viewMatrix() );
 
 		mi28->translate( 0.0f, 0.0f, 0.1f ).rotate( 0.3f, 0.0f, 0.3f, 0.0f );
-		mi28->draw( shader );
-
-		buildings.drawAll( shader );
+		mi28->draw( lightingShader );
+		buildings.drawAll( lightingShader );
 		for ( auto & m : staticModels )
-			m->draw( shader );
+			m->draw( lightingShader );
+
+		// --------------------------------- LIGHTING PASS ----------------------------------------
+		sun.move();
+		lightingShader.bind();
+		lightingShader.setVector( "viewPos", cameras[cameraIndex]->getPosition() );
+		sun.setInShader( lightingShader );
+		lightSet.setInShader( lightingShader );
+
+		renderQuad();
+
+		// lightSourceShader.bind();
+		// lightSourceShader.setMatrix( "view", view );
+		// for ( auto & m : lightModels )
+		// m->draw( lightSourceShader );
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glCall( glfwSwapBuffers( window ) );
@@ -165,6 +179,11 @@ int main()
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	glfwTerminate();
 	return 0;
+}
+
+void renderQuad()
+{
+
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly

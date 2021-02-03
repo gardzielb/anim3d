@@ -16,7 +16,7 @@ Shader::Shader( const std::string & vertexPath, const std::string & fragmentPath
 
 Shader::Shader( const std::string & path )
 {
-	auto[vsSource, fsSource] = readShaderSources( path + "/vertex.shader", path + "/fragment.shader" );
+	auto[vsSource, fsSource] = readShaderSources( path + "_vertex.shader", path + "_fragment.shader" );
 	programId = createShader( vsSource, fsSource );
 }
 
