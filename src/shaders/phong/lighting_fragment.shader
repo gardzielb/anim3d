@@ -1,6 +1,6 @@
 #version 330 core
 
-#define NR_POINT_LIGHTS 5
+#define NR_POINT_LIGHTS 60
 #define NR_SPOT_LIGHTS 5
 
 struct Fog

@@ -18,6 +18,8 @@ public:
 
 	bool checkIsComplete() const;
 
+	void blitDepthBuffer( int screenWidth, int screenHeight ) const;
+
 	void bind() const;
 
 	void unbind() const;

@@ -25,12 +25,12 @@ Shader::~Shader()
 	glCall( glDeleteProgram( programId ) );
 }
 
-void Shader::bind()
+void Shader::bind() const
 {
 	glCall( glUseProgram( programId ) );
 }
 
-void Shader::unbind()
+void Shader::unbind() const
 {
 	glCall( glUseProgram( 0 ) );
 }

@@ -39,9 +39,9 @@ public:
 
 	~Shader();
 
-	void bind();
+	void bind() const;
 
-	void unbind();
+	void unbind() const;
 
 	void setBool( const std::string & name, bool value ) const;
 
