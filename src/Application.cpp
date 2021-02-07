@@ -50,7 +50,9 @@ void Application::run()
 			width, height
 	);
 	ForwardRenderer fwRenderer( "../src/shaders/phong/forward", "../src/shaders/light/default" );
-	std::array<Renderer *, 3> renderers = { &dsRenderer, &fwRenderer };
+	ForwardRenderer gsRenderer( "../src/shaders/gouraud/default", "../src/shaders/light/default" );
+
+	std::array<Renderer *, 3> renderers = { &dsRenderer, &fwRenderer, &gsRenderer };
 	int rendererIndex = 0;
 
 	ImGui::CreateContext();
@@ -292,7 +294,7 @@ Application::createPointLights( ModelLoader & loader )
 Sun Application::createSun()
 {
 	Light sunLight = { glm::vec3( 0.05f, 0.05f, 0.05f ), glm::vec3( 0.4f, 0.4f, 0.4f ), glm::vec3( 0.6f, 0.6f, 0.6f ) };
-	return Sun( sunLight, 0.1f );
+	return Sun( sunLight, 0.5f );
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
