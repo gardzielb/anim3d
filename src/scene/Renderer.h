@@ -7,10 +7,10 @@
 #include "Model.h"
 #include "LightSource.h"
 #include "Sun.h"
-#include "Shader.h"
+#include "../api/Shader.h"
 #include "Camera.h"
-#include "GeometryBuffer.h"
-#include "VertexArray.h"
+#include "../api/GeometryBuffer.h"
+#include "../api/VertexArray.h"
 
 
 struct Fog
@@ -40,7 +40,7 @@ private:
 	Shader lightShader;
 
 public:
-	ForwardRenderer( const std::string msPath, const std::string lsPath );
+	ForwardRenderer( const std::string msPath, const std::string lsPath, int scrWitdth, int scrHeight );
 
 	void renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels, const Sun & sun,
 					  const LightSourceSet & lightSourceSet, const Fog & fog,

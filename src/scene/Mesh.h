@@ -5,9 +5,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Shader.h"
-#include "VertexArray.h"
-#include "IndexBuffer.h"
+#include "../api/Shader.h"
+#include "../api/VertexArray.h"
+#include "../api/IndexBuffer.h"
 
 #include <string>
 #include <vector>

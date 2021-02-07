@@ -4,7 +4,7 @@
 
 //#define STB_IMAGE_IMPLEMENTATION
 
-#include "dependencies/stb_image.h"
+#include "../dependencies/stb_image.h"
 #include "ModelLoader.h"
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>

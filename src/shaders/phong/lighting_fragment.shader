@@ -63,8 +63,6 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
-//in vec3 FragPos;
-//in vec3 Normal;
 in vec2 TexCoords;
 
 out vec4 FragColor;

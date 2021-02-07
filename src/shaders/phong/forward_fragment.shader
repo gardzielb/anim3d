@@ -80,6 +80,7 @@ void main()
 	vec3 viewDir = normalize(viewPos - FragPos);
 
 	vec3 color = computeDirectionalLight(directionalLight, normal, viewDir);
+	//	vec3 color = vec3(0.0, 0.0, 0.0);
 
 	for (int i = 0; i < pointCount; i++)
 	{
@@ -91,10 +92,8 @@ void main()
 		color += computeSpotLight(spotLights[i], normal, viewDir);
 	}
 
-	//	float fogCoordinate = length(FragPos - viewPos);
-	//	FragColor = mix(vec4(color, 1.0), vec4(fog.color, 1.0), getFogFactor(fog, fogCoordinate));
-		FragColor = vec4(color, 1.0);
-	//	FragColor = vec4(normal, 1.0);
+		float fogCoordinate = length(FragPos - viewPos);
+		FragColor = mix(vec4(color, 1.0), vec4(fog.color, 1.0), getFogFactor(fog, fogCoordinate));
 }
 
 
@@ -129,10 +128,8 @@ vec3 computePointLight(PointLight light, vec3 normal, vec3 viewDir)
 
 vec3 computeDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)
 {
-	//	vec3 lightDir = normalize(-light.direction);
-	vec3 lightDir = vec3(0.0, 0.0, 0.0);
-//	vec3 ambient = light.ambient * vec3(texture(material.diffuse1, TexCoords));
-	vec3 ambient = vec3(0.0, 0.0, 0.0);
+	vec3 lightDir = normalize(-light.direction);
+	vec3 ambient = light.ambient * vec3(texture(material.diffuse1, TexCoords));
 	vec3 diffuse = computeDiffuse(lightDir, normal, light.diffuse);
 	vec3 specular = computeSpecular(lightDir, normal, viewDir, light.specular);
 	return ambient + diffuse + specular;
@@ -148,7 +145,8 @@ vec3 computeSpecular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 lightSpecula
 {
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	return lightSpecular * spec * vec3(texture(material.specular1, TexCoords));
+	//	return lightSpecular * spec * vec3(texture(material.specular1, TexCoords));
+	return vec3(0, 0, 0);
 }
 
 float computeAttenuation(vec3 lightPos, float constant, float linear, float quadratic)

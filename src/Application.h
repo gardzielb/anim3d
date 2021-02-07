@@ -11,12 +11,12 @@
 #include <vector>
 #include <memory>
 
-#include "LightSource.h"
-#include "ComplexModel.h"
-#include "Camera.h"
-#include "ModelLoader.h"
-#include "Sun.h"
-#include "RepeatedModel.h"
+#include "scene/LightSource.h"
+#include "scene/ComplexModel.h"
+#include "scene/Camera.h"
+#include "scene/ModelLoader.h"
+#include "scene/Sun.h"
+#include "scene/RepeatedModel.h"
 
 
 class Application
@@ -34,19 +34,6 @@ public:
 
 private:
 	void initOpenGl();
-
-	std::array<std::shared_ptr<Camera>, 3> createCameras( const std::shared_ptr<Model> & chopper );
-
-	std::shared_ptr<SpotLightSource> createSpotLight();
-
-	std::vector<std::shared_ptr<Model>> createStaticModels( ModelLoader & loader );
-
-	std::shared_ptr<ComplexModel> createChopper( ModelLoader & loader, const std::shared_ptr<SpotLightSource> & light );
-
-	std::pair<std::vector<std::shared_ptr<PointLightSource>>, std::shared_ptr<RepeatedModel>>
-	createPointLights( ModelLoader & loader );
-
-	Sun createSun();
 
 	void processInput( const std::shared_ptr<SpotLightSource> & heliLight, const glm::vec3 & heliFront,
 					   const glm::vec3 & heliRight );

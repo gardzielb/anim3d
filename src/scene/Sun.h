@@ -5,7 +5,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "Shader.h"
+#include "../api/Shader.h"
 #include "LightSource.h"
 
 

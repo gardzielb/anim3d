@@ -3,7 +3,7 @@
 //
 
 #include "Renderer.h"
-#include "glUtils.h"
+#include "../api/glUtils.h"
 
 
 void ForwardRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels,
@@ -33,10 +33,12 @@ void ForwardRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<M
 		lm->draw( lightShader );
 }
 
-ForwardRenderer::ForwardRenderer( const std::string msPath, const std::string lsPath )
+ForwardRenderer::ForwardRenderer( const std::string msPath, const std::string lsPath, int scrWitdth, int scrHeight )
 		: modelShader( msPath ), lightShader( lsPath )
 {
-	glm::mat4 projectionMatrix = glm::perspective( glm::radians( 45.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
+	glm::mat4 projectionMatrix = glm::perspective(
+			glm::radians( 45.0f ), (float) scrWitdth / (float) scrHeight, 0.1f, 100.0f
+	);
 	modelShader.bind();
 	modelShader.setMatrix( "projection", projectionMatrix );
 	lightShader.bind();
