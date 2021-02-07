@@ -5,7 +5,7 @@
 #pragma once
 
 #include <iostream>
-#include "dependencies/glad.h"
+#include "GL/glew.h"
 
 
 #define glCall( x ) glClearError(); \

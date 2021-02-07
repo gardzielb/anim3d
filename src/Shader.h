@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "dependencies/glad.h"
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <string>
 #include <fstream>

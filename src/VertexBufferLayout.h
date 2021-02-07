@@ -5,7 +5,7 @@
 #pragma once
 
 #include <vector>
-#include "dependencies/glad.h"
+#include <GL/glew.h>
 
 
 struct VertexBufferElement

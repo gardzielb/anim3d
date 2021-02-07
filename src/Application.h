@@ -5,8 +5,7 @@
 #pragma once
 
 
-#include "dependencies/glad.h"
-
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <array>
 #include <vector>
@@ -49,8 +48,8 @@ private:
 
 	Sun createSun();
 
-	int processInput( int current, const std::shared_ptr<SpotLightSource> & heliLight, const glm::vec3 & heliFront,
-					  const glm::vec3 & heliRight );
+	void processInput( const std::shared_ptr<SpotLightSource> & heliLight, const glm::vec3 & heliFront,
+					   const glm::vec3 & heliRight );
 };
 
 

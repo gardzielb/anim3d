@@ -11,6 +11,8 @@
 #include "glUtils.h"
 #include "Camera.h"
 #include "Model.h"
+#include "dependencies/imgui/imgui.h"
+#include "dependencies/imgui/imgui_impl_glfw_gl3.h"
 
 
 Application::Application( int width, int height )
@@ -27,8 +29,9 @@ void Application::run()
 	Fog fog = { 0.08f, glm::vec3( 0.6f, 0.6f, 0.6f ) };
 
 	ModelLoader modelLoader;
-	auto staticModels = createStaticModels( modelLoader );
+	auto models = createStaticModels( modelLoader );
 	std::shared_ptr<ComplexModel> mi28 = createChopper( modelLoader, spotLight );
+	models.push_back( mi28 );
 
 	auto cameras = createCameras( mi28 );
 
@@ -42,11 +45,19 @@ void Application::run()
 	glCall( glEnable( GL_DEPTH_TEST ) );
 	glCall( glDisable( GL_BLEND ) );
 
-	DeferredRenderer renderer(
+	DeferredRenderer dsRenderer(
 			"../src/shaders/phong/geopass", "../src/shaders/phong/lighting", "../src/shaders/light/default",
 			width, height
 	);
-//	ForwardRenderer renderer( "../src/shaders/phong/forward", "../src/shaders/light/default" );
+	ForwardRenderer fwRenderer( "../src/shaders/phong/forward", "../src/shaders/light/default" );
+	std::array<Renderer *, 3> renderers = { &dsRenderer, &fwRenderer };
+	int rendererIndex = 0;
+
+	ImGui::CreateContext();
+	ImGui_ImplGlfwGL3_Init( window, true );
+	ImGui::StyleColorsDark();
+
+//    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	int cameraIndex = 0;
 	Timer timer;
@@ -56,6 +67,8 @@ void Application::run()
 	{
 		timer.loop();
 
+		ImGui_ImplGlfwGL3_NewFrame();
+
 		// render
 //		glCall( glClearColor( fog.color.r, fog.color.g, fog.color.b, fog.density ) );
 		glCall( glClearColor( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -63,8 +76,35 @@ void Application::run()
 
 		glm::mat4 viewMatrix = cameras[cameraIndex]->viewMatrix();
 		sun.move();
+		mi28->translate( 0.0f, 0.0f, 0.1f ).rotate( 0.3f, 0.0f, 0.3f, 0.0f );
 
-		renderer.renderScene( staticModels, { lightsModel }, sun, lightSet, fog, cameras[cameraIndex] );
+		renderers[rendererIndex]->renderScene(
+				models, { lightsModel }, sun, lightSet, fog, cameras[cameraIndex]
+		);
+
+		// ImGui window
+		{
+			ImGui::Begin( "Control panel" );
+
+			const char * shadingOptions[] = { "Phong deferred", "Phong forward", "Gouraud" };
+			ImGui::Combo( "Shading", &rendererIndex, shadingOptions, 3 );
+
+			const char * cameraNames[] = { "static", "chopper", "spy" };
+			ImGui::Combo( "Camera", &cameraIndex, cameraNames, 3 );
+
+			ImGui::SliderFloat( "Fog density", &fog.density, 0.0f, 1.0f );
+			ImGui::ColorEdit3( "Fog color", (float *) &fog.color );
+
+			ImGui::Text(
+					"Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+					ImGui::GetIO().Framerate
+			);
+
+			ImGui::End();
+		}
+
+		ImGui::Render();
+		ImGui_ImplGlfwGL3_RenderDrawData( ImGui::GetDrawData() );
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glCall( glfwSwapBuffers( window ) );
@@ -73,12 +113,15 @@ void Application::run()
 		// input
 		glm::vec3 heliPos = mi28->offset();
 		glm::vec3 heliDir = glm::cross( -heliPos, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-		cameraIndex = processInput( cameraIndex, spotLight, heliDir, -heliPos );
+		processInput( spotLight, heliDir, -heliPos );
 	}
 }
 
 Application::~Application()
 {
+	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui::DestroyContext();
+
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	glfwTerminate();
 }
@@ -110,13 +153,8 @@ void Application::initOpenGl()
 	glfwMakeContextCurrent( window );
 	glfwSetFramebufferSizeCallback( window, framebuffer_size_callback );
 
-	// glad: load all OpenGL function pointers
-	if ( !gladLoadGLLoader( (GLADloadproc) glfwGetProcAddress ) )
-	{
-		spdlog::error( "Failed to initialize GLAD" );
-		glfwTerminate();
-		exit( 1 );
-	}
+	if ( glewInit() != GLEW_OK )
+		throw std::runtime_error( "Failed to init GLEW" );
 }
 
 std::array<std::shared_ptr<Camera>, 3> Application::createCameras( const std::shared_ptr<Model> & chopper )
@@ -217,71 +255,20 @@ std::shared_ptr<ComplexModel> Application::createChopper( ModelLoader & loader,
 std::pair<std::vector<std::shared_ptr<PointLightSource>>, std::shared_ptr<RepeatedModel>>
 Application::createPointLights( ModelLoader & loader )
 {
-	const int count = 50;
-	std::vector<glm::vec3> positions = {
-			glm::vec3( -1.0f, -0.3f, 0.0f ),
-			glm::vec3( 1.0f, -0.3f, 0.0f ),
-			glm::vec3( 0.0f, -0.3f, -1.0f ),
-			glm::vec3( 0.0f, -0.3f, 1.0f ),
+	const int count = 64;
+	std::vector<glm::vec3> positions;
+	positions.reserve( count );
 
-			glm::vec3( -1.0f, 0.5f, 0.0f ),
-			glm::vec3( 1.0f, 0.5f, 0.0f ),
-			glm::vec3( 0.0f, 0.5f, -1.0f ),
-			glm::vec3( 0.0f, 0.5f, 1.0f ),
-
-			glm::vec3( -2.5f, 0.6f, 0.0f ),
-			glm::vec3( 2.5f, 0.6f, 0.0f ),
-			glm::vec3( 0.0f, 0.6f, -2.5f ),
-			glm::vec3( 0.0f, 0.6f, 2.5f ),
-
-			glm::vec3( -4.0f, -0.3f, 0.0f ),
-			glm::vec3( 4.0f, -0.3f, 0.0f ),
-			glm::vec3( 0.0f, -0.3f, -4.0f ),
-			glm::vec3( 0.0f, -0.3f, 4.0f ),
-
-			glm::vec3( -6.5f, 0.3f, 0.0f ),
-			glm::vec3( 6.5f, 0.3f, 0.0f ),
-			glm::vec3( 0.0f, 0.3f, -6.5f ),
-			glm::vec3( 0.0f, 0.3f, 6.5f ),
-
-			2.0f * glm::vec3( -1.0f, -0.3f, 0.0f ),
-			2.0f * glm::vec3( 1.0f, -0.3f, 0.0f ),
-			2.0f * glm::vec3( 0.0f, -0.3f, -1.0f ),
-			2.0f * glm::vec3( 0.0f, -0.3f, 1.0f ),
-
-			2.0f * glm::vec3( -1.0f, 0.5f, 0.0f ),
-			2.0f * glm::vec3( 1.0f, 0.5f, 0.0f ),
-			2.0f * glm::vec3( 0.0f, 0.5f, -1.0f ),
-			2.0f * glm::vec3( 0.0f, 0.5f, 1.0f ),
-
-			2.0f * glm::vec3( -2.5f, 0.6f, 0.0f ),
-			2.0f * glm::vec3( 2.5f, 0.6f, 0.0f ),
-			2.0f * glm::vec3( 0.0f, 0.6f, -2.5f ),
-			2.0f * glm::vec3( 0.0f, 0.6f, 2.5f ),
-
-			2.0f * glm::vec3( -4.0f, -0.3f, 0.0f ),
-			2.0f * glm::vec3( 4.0f, -0.3f, 0.0f ),
-			2.0f * glm::vec3( 0.0f, -0.3f, -4.0f ),
-			2.0f * glm::vec3( 0.0f, -0.3f, 4.0f ),
-
-			2.0f * glm::vec3( -6.5f, 0.3f, 0.0f ),
-			2.0f * glm::vec3( 6.5f, 0.3f, 0.0f ),
-			2.0f * glm::vec3( 0.0f, 0.3f, -6.5f ),
-			2.0f * glm::vec3( 0.0f, 0.3f, 6.5f ),
-
-			3.0f * glm::vec3( -1.0f, -0.3f, 0.0f ),
-			3.0f * glm::vec3( 1.0f, -0.3f, 0.0f ),
-			3.0f * glm::vec3( 0.0f, -0.3f, -1.0f ),
-			3.0f * glm::vec3( 0.0f, -0.3f, 1.0f ),
-
-			3.0f * glm::vec3( -1.0f, 0.5f, 0.0f ),
-			3.0f * glm::vec3( 1.0f, 0.5f, 0.0f ),
-			3.0f * glm::vec3( 0.0f, 0.5f, -1.0f ),
-			3.0f * glm::vec3( 0.0f, 0.5f, 1.0f ),
-
-			3.0f * glm::vec3( -2.5f, 0.6f, 0.0f ),
-			3.0f * glm::vec3( 2.5f, 0.6f, 0.0f ),
-	};
+	for ( int x = 3; x < 16; x += 4 )
+	{
+		for ( int z = 3; z < 16; z += 4 )
+		{
+			positions.push_back( glm::vec3( x, -0.3f, z ) );
+			positions.push_back( glm::vec3( -x, -0.3f, z ) );
+			positions.push_back( glm::vec3( x, -0.3f, -z ) );
+			positions.push_back( glm::vec3( -x, -0.3f, -z ) );
+		}
+	}
 
 	std::vector<std::shared_ptr<PointLightSource>> lights;
 	lights.reserve( count );
@@ -290,11 +277,11 @@ Application::createPointLights( ModelLoader & loader )
 			glm::vec3( 0.05f, 0.05f, 0.05f ), glm::vec3( 0.8f, 0.8f, 0.8f ), glm::vec3( 1.0f, 1.0f, 1.0f )
 	};
 
-	for ( int i = 0; i < count; i++ )
-	{
-		auto pointLight = std::make_shared<PointLightSource>( iceBallLight, positions[i], 0.09f, 0.032f );
-		lights.push_back( pointLight );
-	}
+//	for ( int i = 0; i < count; i++ )
+//	{
+//		auto pointLight = std::make_shared<PointLightSource>( iceBallLight, positions[i], 0.09f, 0.032f );
+//		lights.push_back( pointLight );
+//	}
 
 	auto model = loadModel( loader, "models/ice_ball/ice_ball.obj" );
 	auto lightsModel = std::make_shared<RepeatedModel>( model, positions, glm::vec3( 0.1f, 0.1f, 0.1f ) );
@@ -309,29 +296,20 @@ Sun Application::createSun()
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-int Application::processInput( int current, const std::shared_ptr<SpotLightSource> & heliLight,
-							   const glm::vec3 & heliFront, const glm::vec3 & heliRight )
+void Application::processInput( const std::shared_ptr<SpotLightSource> & heliLight, const glm::vec3 & heliFront,
+								const glm::vec3 & heliRight )
 {
 	if ( glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
 		glfwSetWindowShouldClose( window, true );
 
 	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
-		heliLight->rotate( heliRight, 0.01f );
-	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
 		heliLight->rotate( -heliRight, 0.01f );
+	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
+		heliLight->rotate( heliRight, 0.01f );
 	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
 		heliLight->rotate( heliFront, 0.01f );
 	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
 		heliLight->rotate( -heliFront, 0.01f );
-
-	if ( glfwGetKey( window, GLFW_KEY_1 ) == GLFW_PRESS )
-		return 0;
-	if ( glfwGetKey( window, GLFW_KEY_2 ) == GLFW_PRESS )
-		return 1;
-	if ( glfwGetKey( window, GLFW_KEY_3 ) == GLFW_PRESS )
-		return 2;
-
-	return current;
 
 //	if ( glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS )
 //		camera->rotate( 0.0f, 2.0f );

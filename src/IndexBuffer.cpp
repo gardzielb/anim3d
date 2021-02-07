@@ -3,7 +3,6 @@
 //
 
 #include "IndexBuffer.h"
-#include "dependencies/glad.h"
 #include "glUtils.h"
 
 

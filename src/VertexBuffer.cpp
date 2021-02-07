@@ -3,7 +3,7 @@
 //
 
 #include "VertexBuffer.h"
-#include "dependencies/glad.h"
+#include <GL/glew.h>
 #include "glUtils.h"
 
 
