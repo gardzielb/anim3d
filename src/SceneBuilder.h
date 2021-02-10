@@ -34,7 +34,8 @@ public:
 
 	std::shared_ptr<ComplexModel> createChopper( const std::shared_ptr<SpotLightSource> & light );
 
-	std::pair<std::vector<std::shared_ptr<PointLightSource>>, std::shared_ptr<RepeatedModel>> createPointLights();
+	std::pair<std::vector<std::shared_ptr<PointLightSource>>, std::shared_ptr<RepeatedModel>>
+	createPointLights( int count = 4 );
 
 	Sun createSun();
 };

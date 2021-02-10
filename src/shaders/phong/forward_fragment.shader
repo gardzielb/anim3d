@@ -1,6 +1,6 @@
 #version 330 core
 
-#define NR_POINT_LIGHTS 64
+#define NR_POINT_LIGHTS 1024
 #define NR_SPOT_LIGHTS 5
 
 struct Fog
@@ -147,7 +147,8 @@ vec3 computeSpecular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 lightSpecula
 {
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	return lightSpecular * spec * texture(material.specular1, TexCoords).r * vec3(texture(material.diffuse1, TexCoords));
+	return lightSpecular * spec * texture(material.specular1, TexCoords).rgb;
+//	return lightSpecular * spec * texture(material.specular1, TexCoords).r * vec3(texture(material.diffuse1, TexCoords));
 //	return vec3(0.5, 0.5, 0.5);
 }
 

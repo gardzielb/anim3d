@@ -22,7 +22,7 @@ Application::Application( int width, int height )
 	stbi_set_flip_vertically_on_load( true );
 }
 
-void Application::run()
+void Application::run( int lightCount )
 {
 	SceneBuilder builder;
 	auto spotLight = builder.createSpotLight();
@@ -32,7 +32,7 @@ void Application::run()
 	std::shared_ptr<ComplexModel> mi28 = builder.createChopper( spotLight );
 	models.push_back( mi28 );
 
-	auto[pointLights, lightsModel] = builder.createPointLights();
+	auto[pointLights, lightsModel] = builder.createPointLights( lightCount );
 
 	LightSourceSet lightSet( pointLights.size(), 1 );
 	lightSet.addSpotLightSource( spotLight );

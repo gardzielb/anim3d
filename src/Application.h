@@ -29,7 +29,7 @@ private:
 public:
 	Application( int width, int height );
 
-	void run();
+	void run( int lightCount );
 
 	~Application();
 

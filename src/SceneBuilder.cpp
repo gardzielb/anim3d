@@ -101,20 +101,22 @@ std::shared_ptr<ComplexModel> SceneBuilder::createChopper( const std::shared_ptr
 }
 
 std::pair<std::vector<std::shared_ptr<PointLightSource>>, std::shared_ptr<RepeatedModel>>
-SceneBuilder::createPointLights()
+SceneBuilder::createPointLights( int count )
 {
-	const int count = 64;
 	std::vector<glm::vec3> positions;
 	positions.reserve( count );
 
-	for ( int x = 3; x < 16; x += 4 )
+	int loopCount = std::max( 1, (int) std::ceil( std::log2( count / 4 ) ) );
+	int step = 16 / loopCount;
+
+	for ( int x = 0; x < 16; x += step )
 	{
-		for ( int z = 3; z < 16; z += 4 )
+		for ( int z = 0; z < 16; z += step )
 		{
-			positions.push_back( glm::vec3( x, -0.3f, z ) );
-			positions.push_back( glm::vec3( -x, -0.3f, z ) );
-			positions.push_back( glm::vec3( x, -0.3f, -z ) );
-			positions.push_back( glm::vec3( -x, -0.3f, -z ) );
+			positions.push_back( glm::vec3( x + 3, -0.3f, z + 3 ) );
+			positions.push_back( glm::vec3( -x - 3, -0.3f, z + 3 ) );
+			positions.push_back( glm::vec3( x + 3, -0.3f, -z - 3 ) );
+			positions.push_back( glm::vec3( -x - 3, -0.3f, -z - 3 ) );
 		}
 	}
 
