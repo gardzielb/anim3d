@@ -32,12 +32,12 @@ public:
 		return fog;
 	}
 
-	const inline std::shared_ptr<Renderer> & getRenderer() const
+	inline std::shared_ptr<Renderer> & getRenderer()
 	{
 		return renderers[rendererIndex];
 	}
 
-	const inline std::shared_ptr<Camera> & getCamera() const
+	inline std::shared_ptr<Camera> & getCamera()
 	{
 		return cameras[cameraIndex];
 	}

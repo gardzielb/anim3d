@@ -22,14 +22,26 @@ struct Fog
 
 class Renderer
 {
+protected:
+	int scrWitdth, scrHeight;
+	float zoomValue = 45.0f;
+	glm::mat4 projectionMatrix;
+
 public:
 	typedef std::shared_ptr<Model> ModelPtr;
+
+	Renderer( int scrWitdth, int scrHeight );
 
 	virtual void renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels, const Sun & sun,
 							  const LightSourceSet & lightSourceSet, const Fog & fog,
 							  const std::shared_ptr<Camera> & camera ) const = 0;
 
+	void zoom( float offset );
+
 	virtual ~Renderer() = default;
+
+protected:
+	void setProjection( const Shader & shader ) const;
 };
 
 
@@ -55,7 +67,6 @@ private:
 	Shader lightingShader;
 	Shader lightSourceShader;
 	GeometryBuffer gBuffer;
-	int scrWitdth, scrHeight;
 	VertexArray quadVa;
 	VertexBuffer quadVb;
 

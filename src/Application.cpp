@@ -67,7 +67,7 @@ void Application::run()
 		// input
 		glm::vec3 heliPos = mi28->offset();
 		glm::vec3 heliDir = glm::cross( -heliPos, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-		processInput( spotLight, heliDir, -heliPos );
+		processInput( spotLight, heliDir, -heliPos, controller.getCamera(), controller.getRenderer() );
 	}
 }
 
@@ -110,26 +110,41 @@ void Application::initOpenGl()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void Application::processInput( const std::shared_ptr<SpotLightSource> & heliLight, const glm::vec3 & heliFront,
-								const glm::vec3 & heliRight )
+								const glm::vec3 & heliRight, std::shared_ptr<Camera> & camera,
+								std::shared_ptr<Renderer> & renderer )
 {
 	if ( glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
 		glfwSetWindowShouldClose( window, true );
 
-	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
+	if ( glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS )
 		heliLight->rotate( -heliRight, 0.01f );
-	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
+	if ( glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS )
 		heliLight->rotate( heliRight, 0.01f );
-	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
+	if ( glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS )
 		heliLight->rotate( heliFront, 0.01f );
-	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
+	if ( glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS )
 		heliLight->rotate( -heliFront, 0.01f );
 
-//	if ( glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS )
-//		camera->rotate( 0.0f, 2.0f );
-//	if ( glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS )
-//		camera->rotate( 0.0f, -2.0f );
-//	if ( glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS )
-//		camera->rotate( 2.0f, 0.0f );
-//	if ( glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS )
-//		camera->rotate( -2.0f, 0.0f );
+	if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS )
+		camera->moveForward();
+	if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
+		camera->moveBack();
+	if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
+		camera->moveRight();
+	if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS )
+		camera->moveLeft();
+
+	if ( glfwGetMouseButton( window, GLFW_MOUSE_BUTTON_RIGHT ) == GLFW_PRESS )
+		camera->setRotationLock( true );
+	if ( glfwGetMouseButton( window, GLFW_MOUSE_BUTTON_MIDDLE ) == GLFW_PRESS )
+		camera->setRotationLock( false );
+
+	double xMouse, yMouse;
+	glCall( glfwGetCursorPos( window, &xMouse, &yMouse ) );
+	camera->handleMouseMove( xMouse, yMouse );
+
+	if ( glfwGetKey( window, GLFW_KEY_EQUAL ) == GLFW_PRESS )
+		renderer->zoom( -0.5f );
+	if ( glfwGetKey( window, GLFW_KEY_MINUS ) == GLFW_PRESS )
+		renderer->zoom( 0.5f );
 }

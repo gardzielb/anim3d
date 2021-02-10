@@ -17,6 +17,7 @@
 #include "scene/ModelLoader.h"
 #include "scene/Sun.h"
 #include "scene/RepeatedModel.h"
+#include "scene/Renderer.h"
 
 
 class Application
@@ -36,7 +37,8 @@ private:
 	void initOpenGl();
 
 	void processInput( const std::shared_ptr<SpotLightSource> & heliLight, const glm::vec3 & heliFront,
-					   const glm::vec3 & heliRight );
+					   const glm::vec3 & heliRight, std::shared_ptr<Camera> & camera,
+					   std::shared_ptr<Renderer> & renderer );
 };
 
 

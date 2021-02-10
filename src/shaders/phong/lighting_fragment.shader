@@ -155,6 +155,7 @@ vec3 computeSpecular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 lightSpecula
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 	return lightSpecular * spec * material.specular * material.diffuse;
+//	return vec3(0.2, 0.2, 0.2);
 }
 
 float computeAttenuation(vec3 fragPos, vec3 lightPos, float constant, float linear, float quadratic)

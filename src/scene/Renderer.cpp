@@ -16,9 +16,10 @@ void ForwardRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<M
 	glm::mat4 viewMatrix = camera->viewMatrix();
 
 	modelShader.bind();
+	setProjection( modelShader );
 	modelShader.setMatrix( "view", viewMatrix );
 	modelShader.setVector( "viewPos", camera->getPosition() );
-	modelShader.setFloat( "shininess", 64.0f );
+	modelShader.setFloat( "material.shininess", 64.0f );
 	modelShader.setFloat( "fog.density", fog.density );
 	modelShader.setVector( "fog.color", fog.color );
 	sun.setInShader( modelShader );
@@ -29,21 +30,14 @@ void ForwardRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<M
 
 	lightShader.bind();
 	lightShader.setMatrix( "view", viewMatrix );
+	setProjection( lightShader );
 	for ( auto & lm : lightModels )
 		lm->draw( lightShader );
 }
 
 ForwardRenderer::ForwardRenderer( const std::string msPath, const std::string lsPath, int scrWitdth, int scrHeight )
-		: modelShader( msPath ), lightShader( lsPath )
-{
-	glm::mat4 projectionMatrix = glm::perspective(
-			glm::radians( 45.0f ), (float) scrWitdth / (float) scrHeight, 0.1f, 100.0f
-	);
-	modelShader.bind();
-	modelShader.setMatrix( "projection", projectionMatrix );
-	lightShader.bind();
-	lightShader.setMatrix( "projection", projectionMatrix );
-}
+		: Renderer( scrWitdth, scrHeight ), modelShader( msPath ), lightShader( lsPath )
+{}
 
 void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels,
 									const Sun & sun, const LightSourceSet & lightSourceSet, const Fog & fog,
@@ -60,6 +54,7 @@ void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<
 
 	geoPassShader.bind();
 	geoPassShader.setMatrix( "view", viewMatrix );
+	setProjection( geoPassShader );
 
 	for ( auto & model : models )
 		model->draw( geoPassShader );
@@ -87,6 +82,7 @@ void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<
 
 	// --------------------------------- LIGHTS ---------------------------------
 	lightSourceShader.bind();
+	setProjection( lightSourceShader );
 	lightSourceShader.setMatrix( "view", viewMatrix );
 	for ( auto & lm : lightModels )
 		lm->draw( lightSourceShader );
@@ -94,22 +90,13 @@ void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<
 
 DeferredRenderer::DeferredRenderer( const std::string & mgsPath, const std::string & mlsPath,
 									const std::string & lsPath, int scrWitdth, int scrHeight )
-		: geoPassShader( mgsPath ), lightingShader( mlsPath ), lightSourceShader( lsPath ),
-		  gBuffer( scrWitdth, scrHeight ), scrWitdth( scrWitdth ), scrHeight( scrHeight ),
-		  quadVb( ndcVertices, 4 * 5 * sizeof( float ) )
+		: Renderer( scrWitdth, scrHeight ), geoPassShader( mgsPath ), lightingShader( mlsPath ),
+		  lightSourceShader( lsPath ), gBuffer( scrWitdth, scrHeight ), quadVb( ndcVertices, 4 * 5 * sizeof( float ) )
 {
 	VertexBufferLayout layout;
 	layout.pushFloat( 3 );  // position
 	layout.pushFloat( 2 );  // texture coords
 	quadVa.addBuffer( quadVb, layout );
-
-	glm::mat4 projectionMatrix = glm::perspective(
-			glm::radians( 45.0f ), (float) scrWitdth / (float) scrHeight, 0.1f, 100.0f
-	);
-	geoPassShader.bind();
-	geoPassShader.setMatrix( "projection", projectionMatrix );
-	lightSourceShader.bind();
-	lightSourceShader.setMatrix( "projection", projectionMatrix );
 
 	lightingShader.bind();
 	gBuffer.setShaderTextures( lightingShader );
@@ -121,3 +108,24 @@ float DeferredRenderer::ndcVertices[] = {
 		1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
 		1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
 };
+
+void Renderer::zoom( float offset )
+{
+	zoomValue = std::min( 45.0f, std::max( 1.0f, zoomValue + offset ) );
+	projectionMatrix = glm::perspective(
+			glm::radians( zoomValue ), (float) scrWitdth / (float) scrHeight, 0.1f, 100.0f
+	);
+}
+
+Renderer::Renderer( int scrWitdth, int scrHeight ) : scrWitdth( scrWitdth ), scrHeight( scrHeight )
+{
+	projectionMatrix = glm::perspective(
+			glm::radians( zoomValue ), (float) scrWitdth / (float) scrHeight, 0.1f, 100.0f
+	);
+}
+
+void Renderer::setProjection( const Shader & shader ) const
+{
+	shader.bind();
+	shader.setMatrix( "projection", projectionMatrix );
+}
