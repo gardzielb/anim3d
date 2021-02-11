@@ -70,6 +70,11 @@ std::vector<std::shared_ptr<Model>> SceneBuilder::createStaticModels()
 	std::shared_ptr<SimpleModel> statue = loadModel( modelLoader, "../models/orc_statue/orc_statue.obj" );
 	statue->scale( glm::vec3( 0.4f, 0.4f, 0.4f ) );
 
+//	std::shared_ptr<SimpleModel> world = loadModel( modelLoader, "../models/world/world.obj" );
+//	world->scale( 5.0f, 5.0f, 5.0f );
+
+//	std::shared_ptr<SimpleModel> scavenger = loadModel( modelLoader, "../models/scavenger/scavenger2_000001.obj" );
+
 	std::shared_ptr<SimpleModel> ground = loadModel( modelLoader, "../models/ground/ground2.obj" );
 	ground->translate( glm::vec3( 0.0f, -0.5f, 0.0f ) ).scale( 3.0f, 3.0f, 3.0f );
 
@@ -160,4 +165,12 @@ std::array<std::shared_ptr<Renderer>, 3> SceneBuilder::createRenderers( const st
 	);
 
 	return { dsRenderer, fwRenderer, gsRenderer };
+}
+
+std::shared_ptr<AnimatedModel> SceneBuilder::createScavenger()
+{
+	AnimationBuilder builder;
+	auto scavenger = builder.createAnimation( "../models/scavenger/scavenger", 30, modelLoader );
+	scavenger->translate( -1.5f, -0.48f, -1.0f ).scale( 0.5f, 0.5f, 0.5f );
+	return scavenger;
 }

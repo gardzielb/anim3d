@@ -30,7 +30,9 @@ void Application::run( int lightCount )
 
 	auto models = builder.createStaticModels();
 	std::shared_ptr<ComplexModel> mi28 = builder.createChopper( spotLight );
+	std::shared_ptr<AnimatedModel> scavenger = builder.createScavenger();
 	models.push_back( mi28 );
+	models.push_back( scavenger );
 
 	auto[pointLights, lightsModel] = builder.createPointLights( lightCount );
 
@@ -44,7 +46,7 @@ void Application::run( int lightCount )
 
 	GuiSceneController controller(
 			window, builder.createRenderers( "../src/shaders/", width, height ), builder.createCameras( mi28 ),
-			{ 0.05f, glm::vec3( 0.8f, 0.8f, 0.8f ) }
+			{ 0.0f, glm::vec3( 0.8f, 0.8f, 0.8f ) }
 	);
 
 	// render loop
@@ -53,6 +55,7 @@ void Application::run( int lightCount )
 		glm::mat4 viewMatrix = controller.getCamera()->viewMatrix();
 		sun.move();
 		mi28->translate( 0.0f, 0.0f, 0.1f ).rotate( 0.3f, 0.0f, 0.3f, 0.0f );
+		scavenger->translate( 0.0f, 0.0f, 0.02f );
 
 		controller.getRenderer()->renderScene(
 				models, { lightsModel }, sun, lightSet, controller.getFog(), controller.getCamera()

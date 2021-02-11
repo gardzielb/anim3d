@@ -15,6 +15,7 @@
 #include "scene/ModelLoader.h"
 #include "scene/Sun.h"
 #include "scene/Renderer.h"
+#include "scene/AnimatedModel.h"
 
 
 class SceneBuilder
@@ -38,6 +39,8 @@ public:
 	createPointLights( int count = 4 );
 
 	Sun createSun();
+
+	std::shared_ptr<AnimatedModel> createScavenger();
 };
 
 

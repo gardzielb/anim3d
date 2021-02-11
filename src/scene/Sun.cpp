@@ -13,8 +13,9 @@ void Sun::move()
 	if ( currentAngle >= 360 )
 		currentAngle -= 360;
 
-	float intensity = std::max( 0.0f, std::sin( glm::radians( currentAngle ) ) );
-//	float sqIntensity = intensity * intensity;
+//	float intensity = std::max( 0.0, 0.022222 * currentAngle - 0.000123 * currentAngle * currentAngle );
+//	spdlog::info( "intensity = {}", intensity );
+
 //	light.diffuse = intensity * fullLight.diffuse;
 //	light.specular = intensity * fullLight.specular;
 }
