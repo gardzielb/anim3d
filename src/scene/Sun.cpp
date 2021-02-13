@@ -7,6 +7,11 @@
 #include <spdlog/spdlog.h>
 
 
+float Sun::getBrightness() const
+{
+	return std::max( 0.0, 0.022222 * currentAngle - 0.000123 * currentAngle * currentAngle );
+}
+
 void Sun::move()
 {
 	currentAngle += rotationAngle;

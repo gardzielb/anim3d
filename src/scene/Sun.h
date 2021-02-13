@@ -23,4 +23,6 @@ public:
 	void move();
 
 	void setInShader( const Shader & shader ) const;
+
+	float getBrightness() const;
 };

@@ -43,37 +43,40 @@ static std::shared_ptr<SimpleModel> loadModel( ModelLoader & loader, const std::
 	return model;
 }
 
-static std::shared_ptr<RepeatedModel> createBuildings( ModelLoader & loader, const std::string & modelPath )
+static std::vector<std::shared_ptr<RepeatedModel>> createBuildings( ModelLoader & loader )
 {
-	std::shared_ptr<SimpleModel> building = loadModel( loader, modelPath );
-	std::vector<glm::vec3> positions = {
-			glm::vec3( -4.0f, -0.5f, 0.0f ),
-			glm::vec3( 4.0f, -0.5f, 0.0f ),
-			glm::vec3( 0.0f, -0.5f, -4.0f ),
-			glm::vec3( 0.0f, -0.5f, 4.0f ),
-			glm::vec3( -4.0f, -0.5f, -4.0f ),
-			glm::vec3( 4.0f, -0.5f, -4.0f ),
-			glm::vec3( -4.0f, -0.5f, 4.0f ),
-			glm::vec3( 4.0f, -0.5f, 4.0f ),
-			glm::vec3( -2.0f, -0.5f, -4.0f ),
-			glm::vec3( -2.0f, -0.5f, 0.0f ),
-			glm::vec3( -2.0f, -0.5f, 4.0f ),
-			glm::vec3( 2.0f, -0.5f, -4.0f ),
-			glm::vec3( 2.0f, -0.5f, 0.0f ),
-			glm::vec3( 2.0f, -0.5f, 4.0f )
-	};
-	return std::make_shared<RepeatedModel>( building, positions );
+	int sectorRowCount = 8;
+	int step = 2;
+
+	std::vector<glm::vec3> pos1, pos2;
+	pos1.reserve( sectorRowCount * sectorRowCount );
+	pos2.reserve( sectorRowCount * sectorRowCount );
+
+	for ( int x = 0; x < sectorRowCount * step; x += step )
+	{
+		for ( int z = 0; z < sectorRowCount * step; z += step )
+		{
+			int choice = rand() % 2;
+			std::vector<glm::vec3> & posVector = choice ? pos1 : pos2;
+
+			posVector.push_back( glm::vec3( x + step, -0.5f, z + step ) );
+			posVector.push_back( glm::vec3( -x - step, -0.5f, z + step ) );
+			posVector.push_back( glm::vec3( x + step, -0.5f, -z - step ) );
+			posVector.push_back( glm::vec3( -x - step, -0.5f, -z - step ) );
+		}
+	}
+
+	std::shared_ptr<SimpleModel> building1 = loadModel( loader, "../models/building02/building22.obj" );
+	std::shared_ptr<SimpleModel> building2 = loadModel( loader, "../models/building01/building01.obj" );
+
+	return { std::make_shared<RepeatedModel>( building1, pos1 ),
+			 std::make_shared<RepeatedModel>( building2, pos2 ) };
 }
 
 std::vector<std::shared_ptr<Model>> SceneBuilder::createStaticModels()
 {
-	std::shared_ptr<SimpleModel> statue = loadModel( modelLoader, "../models/orc_statue/orc_statue.obj" );
+	std::shared_ptr<SimpleModel> statue = loadModel( modelLoader, "../models/orc_statue/orc_statue2.obj" );
 	statue->scale( glm::vec3( 0.4f, 0.4f, 0.4f ) );
-
-//	std::shared_ptr<SimpleModel> world = loadModel( modelLoader, "../models/world/world.obj" );
-//	world->scale( 5.0f, 5.0f, 5.0f );
-
-//	std::shared_ptr<SimpleModel> scavenger = loadModel( modelLoader, "../models/scavenger/scavenger2_000001.obj" );
 
 	std::shared_ptr<SimpleModel> ground = loadModel( modelLoader, "../models/ground/ground2.obj" );
 	ground->translate( glm::vec3( 0.0f, -0.5f, 0.0f ) ).scale( 3.0f, 3.0f, 3.0f );
@@ -81,9 +84,9 @@ std::vector<std::shared_ptr<Model>> SceneBuilder::createStaticModels()
 	std::shared_ptr<SimpleModel> pripyat = loadModel( modelLoader, "../models/pripyat/pripyat.obj" );
 	pripyat->translate( glm::vec3( 0.0f, -0.6f, -2.0f ) );
 
-	std::shared_ptr<RepeatedModel> buildings = createBuildings( modelLoader, "../models/building02/building022.obj" );
+	std::vector<std::shared_ptr<RepeatedModel>> buildings = createBuildings( modelLoader );
 
-	return { ground, statue, pripyat, buildings };
+	return { ground, statue, pripyat, buildings[0], buildings[1] };
 }
 
 std::shared_ptr<ComplexModel> SceneBuilder::createChopper( const std::shared_ptr<SpotLightSource> & light )
@@ -171,6 +174,13 @@ std::shared_ptr<AnimatedModel> SceneBuilder::createScavenger()
 {
 	AnimationBuilder builder;
 	auto scavenger = builder.createAnimation( "../models/scavenger/scavenger", 30, modelLoader );
-	scavenger->translate( -1.5f, -0.48f, -1.0f ).scale( 0.5f, 0.5f, 0.5f );
+	scavenger->translate( -1.0f, -0.48f, -16.0f ).scale( 0.5f, 0.5f, 0.5f );
 	return scavenger;
+}
+
+std::shared_ptr<SimpleModel> SceneBuilder::createSkyBox()
+{
+	std::shared_ptr<SimpleModel> skybox = loadModel( modelLoader, "../models/skybox/skybox.obj" );
+	skybox->scale( 30.0f, 30.0f, 30.0f );
+	return skybox;
 }

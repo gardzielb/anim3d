@@ -34,6 +34,8 @@ void Application::run( int lightCount )
 	models.push_back( mi28 );
 	models.push_back( scavenger );
 
+	auto skybox = builder.createSkyBox();
+
 	auto[pointLights, lightsModel] = builder.createPointLights( lightCount );
 
 	LightSourceSet lightSet( pointLights.size(), 1 );
@@ -43,7 +45,6 @@ void Application::run( int lightCount )
 
 	glCall( glEnable( GL_DEPTH_TEST ) );
 	glCall( glDisable( GL_BLEND ) );
-
 	GuiSceneController controller(
 			window, builder.createRenderers( "../src/shaders/", width, height ), builder.createCameras( mi28 ),
 			{ 0.0f, glm::vec3( 0.8f, 0.8f, 0.8f ) }
@@ -55,10 +56,10 @@ void Application::run( int lightCount )
 		glm::mat4 viewMatrix = controller.getCamera()->viewMatrix();
 		sun.move();
 		mi28->translate( 0.0f, 0.0f, 0.1f ).rotate( 0.3f, 0.0f, 0.3f, 0.0f );
-		scavenger->translate( 0.0f, 0.0f, 0.02f );
+		scavenger->translate( 0.0f, 0.0f, 0.01f );
 
 		controller.getRenderer()->renderScene(
-				models, { lightsModel }, sun, lightSet, controller.getFog(), controller.getCamera()
+				models, { lightsModel, skybox }, sun, lightSet, controller.getFog(), controller.getCamera()
 		);
 
 		controller.render( "Control panel" );

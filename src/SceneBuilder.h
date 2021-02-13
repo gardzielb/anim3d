@@ -27,6 +27,8 @@ public:
 	std::array<std::shared_ptr<Renderer>, 3> createRenderers( const std::string & shadersPath, int windowWidth,
 															  int windowHeight );
 
+	std::shared_ptr<SimpleModel> createSkyBox();
+
 	std::array<std::shared_ptr<Camera>, 3> createCameras( const std::shared_ptr<Model> & chopper );
 
 	std::shared_ptr<SpotLightSource> createSpotLight();
