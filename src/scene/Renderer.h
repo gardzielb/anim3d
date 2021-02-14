@@ -50,7 +50,6 @@ class ForwardRenderer : public Renderer
 private:
 	Shader modelShader;
 	Shader lightShader;
-//	Shader skyboxShader;
 
 public:
 	ForwardRenderer( const std::string msPath, const std::string lsPath, int scrWitdth, int scrHeight );
@@ -67,7 +66,6 @@ private:
 	Shader geoPassShader;
 	Shader lightingShader;
 	Shader lightSourceShader;
-//	Shader skyboxShader;
 	GeometryBuffer gBuffer;
 	VertexArray quadVa;
 	VertexBuffer quadVb;

@@ -79,7 +79,12 @@ float computeAttenuation(vec3 fragPos, vec3 lightPos, float constant, float line
 void main()
 {
 	vec3 fragPos = texture(gPosition, TexCoords).rgb;
-	vec3 normal = normalize(texture(gNormal, TexCoords).rgb);
+	vec3 Normal = texture(gNormal, TexCoords).rgb;
+
+	if (Normal == vec3(0.0, 0.0, 0.0))
+		discard;
+
+	vec3 normal = normalize(Normal);
 
 	Material material;
 	material.diffuse = texture(gAlbedoSpec, TexCoords).rgb;
@@ -155,7 +160,7 @@ vec3 computeSpecular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 lightSpecula
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 	return lightSpecular * spec * material.specular * material.diffuse;
-//	return vec3(0.2, 0.2, 0.2);
+	//	return vec3(0.2, 0.2, 0.2);
 }
 
 float computeAttenuation(vec3 fragPos, vec3 lightPos, float constant, float linear, float quadratic)

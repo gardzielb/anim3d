@@ -15,7 +15,7 @@ std::array<std::shared_ptr<Camera>, 3> SceneBuilder::createCameras( const std::s
 			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f )
 	);
 	std::shared_ptr<ModelObservingCamera> orcCamera = std::make_shared<ModelObservingCamera>(
-			glm::vec3( 0.0f, 1.0f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f )
+			glm::vec3( 0.0f, 1.5f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f )
 	);
 
 	chopper->addObserver( chopperCamera, glm::vec3( 0.0f, -0.5f, 0.0f ) );
@@ -43,14 +43,36 @@ static std::shared_ptr<SimpleModel> loadModel( ModelLoader & loader, const std::
 	return model;
 }
 
+static std::shared_ptr<RepeatedModel> createGround( ModelLoader & loader )
+{
+	int sectorRowCount = 18;
+	int blockSize = 6;
+
+	std::vector<glm::vec3> positions;
+	positions.reserve( sectorRowCount * sectorRowCount * 4 );
+
+	for ( int x = 0; x < sectorRowCount * blockSize; x += blockSize )
+	{
+		for ( int z = 0; z < sectorRowCount * blockSize; z += blockSize )
+		{
+			positions.push_back( glm::vec3( x + blockSize / 2, 0.0f, z + blockSize / 2 ) );
+			positions.push_back( glm::vec3( -x - blockSize / 2, 0.0f, z + blockSize / 2 ) );
+			positions.push_back( glm::vec3( x + blockSize / 2, 0.0f, -z - blockSize / 2 ) );
+			positions.push_back( glm::vec3( -x - blockSize / 2, 0.0f, -z - blockSize / 2 ) );
+		}
+	}
+
+	return std::make_shared<RepeatedModel>( loader.loadModel( "../models/ground/ground3.obj" ), positions );
+}
+
 static std::vector<std::shared_ptr<RepeatedModel>> createBuildings( ModelLoader & loader )
 {
 	int sectorRowCount = 8;
 	int step = 2;
 
 	std::vector<glm::vec3> pos1, pos2;
-	pos1.reserve( sectorRowCount * sectorRowCount );
-	pos2.reserve( sectorRowCount * sectorRowCount );
+	pos1.reserve( sectorRowCount * sectorRowCount * 4 );
+	pos2.reserve( sectorRowCount * sectorRowCount * 4 );
 
 	for ( int x = 0; x < sectorRowCount * step; x += step )
 	{
@@ -59,10 +81,10 @@ static std::vector<std::shared_ptr<RepeatedModel>> createBuildings( ModelLoader 
 			int choice = rand() % 2;
 			std::vector<glm::vec3> & posVector = choice ? pos1 : pos2;
 
-			posVector.push_back( glm::vec3( x + step, -0.5f, z + step ) );
-			posVector.push_back( glm::vec3( -x - step, -0.5f, z + step ) );
-			posVector.push_back( glm::vec3( x + step, -0.5f, -z - step ) );
-			posVector.push_back( glm::vec3( -x - step, -0.5f, -z - step ) );
+			posVector.push_back( glm::vec3( x + step, 0.0f, z + step ) );
+			posVector.push_back( glm::vec3( -x - step, 0.0f, z + step ) );
+			posVector.push_back( glm::vec3( x + step, 0.0f, -z - step ) );
+			posVector.push_back( glm::vec3( -x - step, 0.0f, -z - step ) );
 		}
 	}
 
@@ -73,16 +95,22 @@ static std::vector<std::shared_ptr<RepeatedModel>> createBuildings( ModelLoader 
 			 std::make_shared<RepeatedModel>( building2, pos2 ) };
 }
 
-std::vector<std::shared_ptr<Model>> SceneBuilder::createStaticModels()
+std::vector<std::shared_ptr<Model>> SceneBuilder::createStaticModels( bool hardcoreGround )
 {
 	std::shared_ptr<SimpleModel> statue = loadModel( modelLoader, "../models/orc_statue/orc_statue2.obj" );
-	statue->scale( glm::vec3( 0.4f, 0.4f, 0.4f ) );
+	statue->translate( 0.0f, 0.5f, 0.0f ).scale( glm::vec3( 0.4f, 0.4f, 0.4f ) );
 
-	std::shared_ptr<SimpleModel> ground = loadModel( modelLoader, "../models/ground/ground2.obj" );
-	ground->translate( glm::vec3( 0.0f, -0.5f, 0.0f ) ).scale( 3.0f, 3.0f, 3.0f );
+	std::shared_ptr<Model> ground;
+	if ( hardcoreGround )
+		ground = createGround( modelLoader );
+	else
+	{
+		ground = loadModel( modelLoader, "../models/ground/ground4.obj" );
+		ground->scale( 120.0f, 120.0f, 120.0f );
+	}
 
 	std::shared_ptr<SimpleModel> pripyat = loadModel( modelLoader, "../models/pripyat/pripyat.obj" );
-	pripyat->translate( glm::vec3( 0.0f, -0.6f, -2.0f ) );
+	pripyat->translate( 0.0f, -0.1f, -2.0f );
 
 	std::vector<std::shared_ptr<RepeatedModel>> buildings = createBuildings( modelLoader );
 
@@ -121,10 +149,10 @@ SceneBuilder::createPointLights( int count )
 	{
 		for ( int z = 0; z < 16; z += step )
 		{
-			positions.push_back( glm::vec3( x + 3, -0.3f, z + 3 ) );
-			positions.push_back( glm::vec3( -x - 3, -0.3f, z + 3 ) );
-			positions.push_back( glm::vec3( x + 3, -0.3f, -z - 3 ) );
-			positions.push_back( glm::vec3( -x - 3, -0.3f, -z - 3 ) );
+			positions.push_back( glm::vec3( x + 3, 0.2f, z + 3 ) );
+			positions.push_back( glm::vec3( -x - 3, 0.2f, z + 3 ) );
+			positions.push_back( glm::vec3( x + 3, 0.2f, -z - 3 ) );
+			positions.push_back( glm::vec3( -x - 3, 0.2f, -z - 3 ) );
 		}
 	}
 
@@ -150,7 +178,7 @@ SceneBuilder::createPointLights( int count )
 Sun SceneBuilder::createSun()
 {
 	Light sunLight = { glm::vec3( 0.05f, 0.05f, 0.05f ), glm::vec3( 0.4f, 0.4f, 0.4f ), glm::vec3( 0.6f, 0.6f, 0.6f ) };
-	return Sun( sunLight, 0.3f );
+	return Sun( sunLight, 720.0f );
 }
 
 std::array<std::shared_ptr<Renderer>, 3> SceneBuilder::createRenderers( const std::string & shadersPath,
@@ -174,13 +202,6 @@ std::shared_ptr<AnimatedModel> SceneBuilder::createScavenger()
 {
 	AnimationBuilder builder;
 	auto scavenger = builder.createAnimation( "../models/scavenger/scavenger", 30, modelLoader );
-	scavenger->translate( -1.0f, -0.48f, -16.0f ).scale( 0.5f, 0.5f, 0.5f );
+	scavenger->translate( -1.0f, -0.02f, -16.0f ).scale( 0.5f, 0.5f, 0.5f );
 	return scavenger;
-}
-
-std::shared_ptr<SimpleModel> SceneBuilder::createSkyBox()
-{
-	std::shared_ptr<SimpleModel> skybox = loadModel( modelLoader, "../models/skybox/skybox.obj" );
-	skybox->scale( 30.0f, 30.0f, 30.0f );
-	return skybox;
 }

@@ -12,17 +12,24 @@
 class Sun
 {
 private:
-	Light fullLight, light;
+	Light fullLight, zeroLight;
+	mutable Light light;
 	glm::vec3 rotationAxis;
-	float rotationAngle;
 	float currentAngle = 0.0f;
+	float brightness;
 
 public:
-	Sun( const Light & light, float rotationAngle );
+	glm::vec3 brightSkyColor, darkSkyColor;
+	float dayLength;
+
+	Sun( const Light & light, float dayLenght );
 
 	void move();
 
 	void setInShader( const Shader & shader ) const;
 
-	float getBrightness() const;
+	glm::vec3 getSkyColor() const;
+
+private:
+	float computeBrightness() const;
 };

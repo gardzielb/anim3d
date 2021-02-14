@@ -7,26 +7,22 @@
 #include <spdlog/spdlog.h>
 
 
-float Sun::getBrightness() const
-{
-	return std::max( 0.0, 0.022222 * currentAngle - 0.000123 * currentAngle * currentAngle );
-}
-
 void Sun::move()
 {
+	float rotationAngle = 180.0f / dayLength;
+
 	currentAngle += rotationAngle;
 	if ( currentAngle >= 360 )
 		currentAngle -= 360;
 
-//	float intensity = std::max( 0.0, 0.022222 * currentAngle - 0.000123 * currentAngle * currentAngle );
-//	spdlog::info( "intensity = {}", intensity );
-
-//	light.diffuse = intensity * fullLight.diffuse;
-//	light.specular = intensity * fullLight.specular;
+	brightness = computeBrightness();
 }
 
 void Sun::setInShader( const Shader & shader ) const
 {
+	light.diffuse = brightness * fullLight.diffuse;
+	light.specular = brightness * fullLight.specular;
+
 	light.setInShader( shader, "directionalLight" );
 	glm::mat4 rotationMatrix = glm::rotate(
 			glm::mat4( 1.0f ), glm::radians( currentAngle ), rotationAxis
@@ -36,6 +32,21 @@ void Sun::setInShader( const Shader & shader ) const
 	shader.setVector( "directionalLight.direction", dir );
 }
 
-Sun::Sun( const Light & light, float rotationAngle )
-		: light( light ), fullLight( light ), rotationAngle( rotationAngle ), rotationAxis( 0.0f, 0.0f, 1.0f )
-{}
+Sun::Sun( const Light & light, float dayLength )
+		: light( light ), fullLight( light ), dayLength( dayLength ), rotationAxis( 0.0f, 0.0f, 1.0f ),
+		  brightSkyColor( 0.5f, 0.75f, 0.9f ), darkSkyColor( 0.0f, 0.0f, 0.15f )
+{
+	zeroLight.diffuse = glm::vec3( light.diffuse.r * 0.8f, light.diffuse.g * 0.2f, light.diffuse.b * 0.2f );
+	zeroLight.specular = glm::vec3( light.specular.r * 0.8f, light.specular.g * 0.2f, light.specular.b * 0.2f );
+	zeroLight.ambient = light.ambient;
+}
+
+glm::vec3 Sun::getSkyColor() const
+{
+	return darkSkyColor + brightness * (brightSkyColor - darkSkyColor);
+}
+
+float Sun::computeBrightness() const
+{
+	return std::max( 0.0, 0.022222 * currentAngle - 0.000123 * currentAngle * currentAngle );
+}

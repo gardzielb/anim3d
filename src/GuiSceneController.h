@@ -15,7 +15,9 @@ private:
 	typedef std::array<std::shared_ptr<Renderer>, 3> RendererArray;
 	typedef std::array<std::shared_ptr<Camera>, 3> CameraArray;
 
+	Sun & sun;
 	Fog fog;
+	float minFogDensity;
 	RendererArray renderers;
 	CameraArray cameras;
 
@@ -23,13 +25,19 @@ private:
 	int rendererIndex = 0;
 
 public:
-	GuiSceneController( GLFWwindow * window, const RendererArray & renderers, const CameraArray & cameras, const Fog & fog );
+	GuiSceneController( GLFWwindow * window, const RendererArray & renderers, const CameraArray & cameras,
+						Sun & sun, float minFogDensity );
 
 	void render( const std::string & title );
 
-	const inline Fog & getFog() const
+	inline const Fog & getFog() const
 	{
 		return fog;
+	}
+
+	inline Sun & getSun()
+	{
+		return sun;
 	}
 
 	inline std::shared_ptr<Renderer> & getRenderer()

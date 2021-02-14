@@ -6,11 +6,11 @@
 #include "../api/glUtils.h"
 
 
-void ForwardRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels,
-								   const Sun & sun, const LightSourceSet & lightSourceSet, const Fog & fog,
+void ForwardRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels, const Sun & sun,
+								   const LightSourceSet & lightSourceSet, const Fog & fog,
 								   const std::shared_ptr<Camera> & camera ) const
 {
-	glCall( glClearColor( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	glCall( glClearColor( fog.color.r, fog.color.g, fog.color.b, fog.density ) );
 	glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
 	glm::mat4 viewMatrix = camera->viewMatrix();
@@ -39,10 +39,12 @@ ForwardRenderer::ForwardRenderer( const std::string msPath, const std::string ls
 		: Renderer( scrWitdth, scrHeight ), modelShader( msPath ), lightShader( lsPath )
 {}
 
-void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels,
-									const Sun & sun, const LightSourceSet & lightSourceSet, const Fog & fog,
+void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<ModelPtr> lightModels, const Sun & sun,
+									const LightSourceSet & lightSourceSet, const Fog & fog,
 									const std::shared_ptr<Camera> & camera ) const
 {
+	glCall( glDisable( GL_BLEND ) );
+
 	glCall( glClearColor( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 
@@ -62,6 +64,7 @@ void DeferredRenderer::renderScene( std::vector<ModelPtr> & models, std::vector<
 	gBuffer.unbind();
 
 	// --------------------------------- LIGHTING PASS ----------------------------------------
+	glCall( glClearColor( fog.color.r, fog.color.g, fog.color.b, fog.density ) );
 	glCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 	gBuffer.bindTextures();
 

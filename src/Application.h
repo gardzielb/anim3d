@@ -29,7 +29,7 @@ private:
 public:
 	Application( int width, int height );
 
-	void run( int lightCount );
+	void run( int lightCount, bool hardcoreGround = false );
 
 	~Application();
 

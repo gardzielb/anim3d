@@ -8,9 +8,12 @@
 
 
 GuiSceneController::GuiSceneController( GLFWwindow * window, const RendererArray & renderers,
-										const CameraArray & cameras, const Fog & fog )
-		: fog( fog )
+										const CameraArray & cameras, Sun & sun, float minFogDensity )
+		: minFogDensity( minFogDensity ), sun( sun )
 {
+	fog.density = minFogDensity;
+	fog.color = sun.getSkyColor();
+
 	ImGui::CreateContext();
 	ImGui_ImplGlfwGL3_Init( window, true );
 	ImGui::StyleColorsDark();
@@ -37,8 +40,12 @@ void GuiSceneController::render( const std::string & title )
 	const char * cameraNames[] = { "static", "chopper", "spy" };
 	ImGui::Combo( "Camera", &cameraIndex, cameraNames, 3 );
 
-	ImGui::SliderFloat( "Fog density", &fog.density, 0.0f, 1.0f );
-	ImGui::ColorEdit3( "Fog color", (float *) &fog.color );
+	ImGui::SliderFloat( "Fog density", &fog.density, minFogDensity, 1.0f );
+
+	ImGui::SliderFloat( "Day length [frames]", &sun.dayLength, 360.0f, 1800.0f );
+	ImGui::ColorEdit3( "Day sky color", (float *) &sun.brightSkyColor );
+	ImGui::ColorEdit3( "Night sky color", (float *) &sun.darkSkyColor );
+	fog.color = sun.getSkyColor();
 
 	ImGui::Text(
 			"Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,

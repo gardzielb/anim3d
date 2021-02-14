@@ -22,19 +22,17 @@ Application::Application( int width, int height )
 	stbi_set_flip_vertically_on_load( true );
 }
 
-void Application::run( int lightCount )
+void Application::run( int lightCount, bool hardcoreGround )
 {
 	SceneBuilder builder;
 	auto spotLight = builder.createSpotLight();
 	Sun sun = builder.createSun();
 
-	auto models = builder.createStaticModels();
+	auto models = builder.createStaticModels( hardcoreGround );
 	std::shared_ptr<ComplexModel> mi28 = builder.createChopper( spotLight );
 	std::shared_ptr<AnimatedModel> scavenger = builder.createScavenger();
 	models.push_back( mi28 );
 	models.push_back( scavenger );
-
-	auto skybox = builder.createSkyBox();
 
 	auto[pointLights, lightsModel] = builder.createPointLights( lightCount );
 
@@ -47,7 +45,7 @@ void Application::run( int lightCount )
 	glCall( glDisable( GL_BLEND ) );
 	GuiSceneController controller(
 			window, builder.createRenderers( "../src/shaders/", width, height ), builder.createCameras( mi28 ),
-			{ 0.0f, glm::vec3( 0.8f, 0.8f, 0.8f ) }
+			sun, 0.025f
 	);
 
 	// render loop
@@ -59,7 +57,7 @@ void Application::run( int lightCount )
 		scavenger->translate( 0.0f, 0.0f, 0.01f );
 
 		controller.getRenderer()->renderScene(
-				models, { lightsModel, skybox }, sun, lightSet, controller.getFog(), controller.getCamera()
+				models, { lightsModel }, sun, lightSet, controller.getFog(), controller.getCamera()
 		);
 
 		controller.render( "Control panel" );

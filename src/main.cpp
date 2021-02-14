@@ -10,8 +10,10 @@ int main( int argc, char ** argv )
 	if ( argc > 1 )
 		lightCount = std::atoi( argv[1] );
 
+	bool hardcoreGround = argc > 2 && std::stoi( argv[2] );
+
 	Application app( SCR_WIDTH, SCR_HEIGHT );
-	app.run( lightCount );
+	app.run( lightCount, hardcoreGround );
 
 	return 0;
 }
