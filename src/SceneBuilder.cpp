@@ -14,14 +14,14 @@ std::array<std::shared_ptr<Camera>, 3> SceneBuilder::createCameras( const std::s
 	std::shared_ptr<ModelBoundCamera> chopperCamera = std::make_shared<ModelBoundCamera>(
 			glm::vec3( 0.0f, 0.0f, 0.0f ), glm::vec3( 0.3f, -1.0f, 0.3f )
 	);
-	std::shared_ptr<ModelObservingCamera> orcCamera = std::make_shared<ModelObservingCamera>(
-			glm::vec3( 0.0f, 1.5f, 0.0f ), glm::vec3( 1.0f, 0.0f, 0.0f )
+	std::shared_ptr<ModelObservingCamera> spyCamera = std::make_shared<ModelObservingCamera>(
+			glm::vec3( 2.0f, 1.4f, 2.0f ), glm::vec3( 1.0f, 0.0f, 0.0f )
 	);
 
 	chopper->addObserver( chopperCamera, glm::vec3( 0.0f, -0.5f, 0.0f ) );
-	chopper->addObserver( orcCamera );
+	chopper->addObserver( spyCamera );
 
-	return { staticCamera, chopperCamera, orcCamera };
+	return { staticCamera, chopperCamera, spyCamera };
 }
 
 std::shared_ptr<SpotLightSource> SceneBuilder::createSpotLight()
@@ -43,7 +43,7 @@ static std::shared_ptr<SimpleModel> loadModel( ModelLoader & loader, const std::
 	return model;
 }
 
-static std::shared_ptr<RepeatedModel> createGround( ModelLoader & loader )
+static std::shared_ptr<RepeatedModel> createHardcoreGround( ModelLoader & loader )
 {
 	int sectorRowCount = 18;
 	int blockSize = 6;
@@ -74,11 +74,13 @@ static std::vector<std::shared_ptr<RepeatedModel>> createBuildings( ModelLoader 
 	pos1.reserve( sectorRowCount * sectorRowCount * 4 );
 	pos2.reserve( sectorRowCount * sectorRowCount * 4 );
 
+	srand( time( 0 ) );
+
 	for ( int x = 0; x < sectorRowCount * step; x += step )
 	{
 		for ( int z = 0; z < sectorRowCount * step; z += step )
 		{
-			int choice = rand() % 2;
+			int choice = (z + x == 0) ? 1 : rand() % 2;
 			std::vector<glm::vec3> & posVector = choice ? pos1 : pos2;
 
 			posVector.push_back( glm::vec3( x + step, 0.0f, z + step ) );
@@ -102,7 +104,7 @@ std::vector<std::shared_ptr<Model>> SceneBuilder::createStaticModels( bool hardc
 
 	std::shared_ptr<Model> ground;
 	if ( hardcoreGround )
-		ground = createGround( modelLoader );
+		ground = createHardcoreGround( modelLoader );
 	else
 	{
 		ground = loadModel( modelLoader, "../models/ground/ground4.obj" );
