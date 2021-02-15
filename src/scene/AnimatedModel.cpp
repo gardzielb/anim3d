@@ -3,6 +3,7 @@
 //
 
 #include "AnimatedModel.h"
+#include <spdlog/spdlog.h>
 
 AnimatedModel::AnimatedModel( std::vector<std::shared_ptr<Model>> & frames )
 		: frames( frames )
@@ -19,6 +20,14 @@ void AnimatedModel::draw( const Shader & shader )
 	current += increase;
 }
 
+static std::string makeFileName( const std::string & path, int number )
+{
+	std::string fileName = path + "_000000.obj";
+	std::string numStr = std::to_string( number );
+	int numOffset = fileName.length() - 4 - numStr.length();
+	return fileName.replace( numOffset, numStr.length(), numStr );
+}
+
 std::shared_ptr<AnimatedModel> AnimationBuilder::createAnimation( const std::string & path, int frameCount,
 																  ModelLoader & loader )
 {
@@ -27,7 +36,7 @@ std::shared_ptr<AnimatedModel> AnimationBuilder::createAnimation( const std::str
 
 	for ( int i = 0; i < frameCount; i++ )
 	{
-		std::string filePath = path + std::to_string( i + 1 ) + ".obj";
+		std::string filePath = makeFileName( path, i + 1 );
 		frames.push_back( loader.loadModel( filePath ) );
 	}
 
